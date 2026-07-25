@@ -1,17 +1,14 @@
 -- ===================================================
 -- Qizzy Database Schema DDL
 -- Web-based Kahoot Alternative for Teaching & Quizzing
--- Optimized for Cloud MySQL (Aiven)
 -- ===================================================
 
 CREATE DATABASE IF NOT EXISTS qizzy;
 USE qizzy;
 
--- ---------------------------------------------------
 -- Table 1: users
 -- Stores both Admin (Teacher/Host) and Student accounts.
 -- Role-based access control (RBAC).
--- ---------------------------------------------------
 DROP TABLE IF EXISTS player_answers;
 DROP TABLE IF EXISTS session_players;
 DROP TABLE IF EXISTS game_sessions;
