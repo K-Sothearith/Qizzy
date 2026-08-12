@@ -305,3 +305,42 @@ Qizzy/
 
 ## 📄 License
 This project is open-source and intended for educational and teaching purposes.
+
+--
+
+## 🎯 Sprint Breakdown
+### 🟢 Sprint 1: Core Foundation & Role-Based Auth (Proposed for Immediate Execution)
+Backend (server/):
+MySQL connection pool (src/config/db.js).
+JWT verification & Role-Based Access Control (src/middlewares/authMiddleware.js).
+Authentication Endpoints (src/controllers/authController.js & src/routes/authRoutes.js):
+Signup: Handles role='student' and role='admin'. Validates ADMIN_PASSCODE against .env when Admin is selected. Hashes passwords with bcryptjs.
+Login: Authenticates credentials, returns signed JWT containing userId, role, name, email.
+Profile endpoint (/api/auth/me): Fetches current user profile and stats.
+Express server integration (src/server.js) with CORS & JSON body parsing.
+Frontend (client/):
+Global Design System (src/index.css) — Dark glassmorphic theme, vibrant color variables, modern typography (Outfit/Inter), responsive layout reset.
+Auth Context & Token Management (src/context/AuthContext.jsx).
+Router setup (src/App.jsx) with protected routes (ProtectedRoute for logged-in users, AdminRoute for Admin users).
+Login View (src/pages/Login.jsx).
+Register View (src/pages/Register.jsx) featuring dynamic role selector (Student/Admin) and smooth slide-in for the secret Admin Passcode field.
+Basic Dashboard Layouts & Placeholders (src/pages/StudentDashboard.jsx, src/pages/AdminDashboard.jsx).
+### 🔵 Sprint 2: Admin Quiz Builder & Management
+Backend:
+Quiz CRUD API (src/controllers/quizController.js & src/routes/quizRoutes.js).
+Endpoints for creating, updating, deleting quizzes, questions, and options.
+Restricted strictly to users with role='admin'.
+Frontend:
+Admin Quiz Library View (AdminDashboard.jsx).
+Visual Quiz Builder (src/pages/QuizEditor.jsx): Interactive question cards, 4 color/shape option inputs (Red Triangle, Blue Diamond, Yellow Circle, Green Square), time limit selector (10s, 20s, 30s, 60s), base point settings.
+### 🟣 Sprint 3: Real-Time Engine, Socket.io & Live Gameplay
+Backend:
+Socket.io server engine (src/sockets/gameSocket.js): Room PIN creation, student JWT room joining, synchronized question timer, response handling, Kahoot speed-based scoring math, leaderboard computation, and saving scores to MySQL database.
+Frontend:
+Host Room (src/pages/HostRoom.jsx): Projector view with Room PIN, Dynamic QRCode (qrcode.react), live student lobby, question countdown, response chart, top 5 leaderboard, and 3D confetti podium (canvas-confetti).
+Player Room (src/pages/PlayerRoom.jsx): QR Code auto-join URL handler (/join?pin=849201), nickname entry, 4-color shape controller grid, instant feedback & streak counter.
+### 🟡 Sprint 4: Student Analytics, UX Polish & Audio/Visual Effects
+Frontend:
+Student Dashboard analytics (total_score, avg_score, quizzes_played, completed quiz history).
+Sound FX audio toggle (quiz lobby music, countdown tick, correct/incorrect chimes).
+Mobile UI & edge-case error handling polish.

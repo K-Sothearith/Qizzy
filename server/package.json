@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Qizzy Express + Socket.io Server",
   "main": "src/server.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
