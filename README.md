@@ -35,6 +35,7 @@ Qizzy implements a strict **Role-Based Access Control (RBAC)** model:
   * Question Builder: Add Multiple-Choice (4 options) or True/False questions with customizable time limits (10s, 20s, 30s, 60s) and points (Standard 1000, Double 2000).
   * Host Live Room: Launch game rooms with automatically generated 6-digit PIN codes.
   * Host Live View (Projector Mode):
+    * **Dynamic Room QR Code & Game PIN Display**: Auto-generates a QR code on screen so students can scan with mobile cameras to auto-join with the Game PIN.
     * Real-time lobby displaying joining students.
     * Synchronized question countdown timer.
     * Live answer distribution chart & answer reveal slide.
@@ -49,7 +50,7 @@ Qizzy implements a strict **Role-Based Access Control (RBAC)** model:
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
 | **Frontend** | React 19 + Vite | High-performance SPA with modern component model |
-| **Icons & Visuals** | Lucide React + Canvas-Confetti | Modern UI icons and podium celebration effects |
+| **Icons & Visuals** | Lucide React + Canvas-Confetti + QRCode.react | Modern UI icons, podium celebration effects & client-side room QR code generation |
 | **Real-Time Client** | Socket.io Client | WebSocket event listener and real-time state sync |
 | **Backend Framework** | Node.js + Express 5 | RESTful API routes & HTTP server |
 | **Real-Time Engine** | Socket.io | Bi-directional room-based event broadcasting |
@@ -176,7 +177,24 @@ $$\text{Points Earned} = \text{Base Points} \times \left(1 - \frac{\text{Respons
                                                                                    └── NO:  Return 403 Forbidden
 ```
 
-### 2. Live Session & Socket Event Flow
+### 2. QR Code Scanning & Auto-Join Workflow
+```
+[Student Mobile] ---> Scans Projector QR Code (URL: /join?pin=849201)
+                         |
+                         +---> Is Student Logged In?
+                                 ├── NO:  Redirect to Login / Signup (preserves target pin=849201)
+                                 │        └─> Authenticates successfully
+                                 │
+                                 └── YES: Proceed directly
+                                              |
+                                              v
+                                   [Enter / Confirm Nickname] ---> Emits: join-game(PIN, JWT_Token, Nickname)
+                                                                       |
+                                                                       v
+                                                           [Straight to Live Waiting Lobby!]
+```
+
+### 3. Live Session & Socket Event Flow
 ```
 [Admin Host]                      [Socket Server]                     [Student Player]
      |                                  |                                     |
