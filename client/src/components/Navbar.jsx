@@ -15,12 +15,12 @@ export default function Navbar() {
     <header style={styles.header}>
       <div style={styles.container}>
         <Link to="/" style={styles.logo}>
-          <Target size={28} color="#6c5ce7" />
+          <Target size={26} color="#6c5ce7" />
           <span style={styles.logoText}>Qizzy</span>
         </Link>
 
         <div style={styles.navRight}>
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <div style={styles.userInfo}>
               <div style={styles.userBadgeGroup}>
                 <span style={styles.userName}>{user.name}</span>
@@ -35,17 +35,8 @@ export default function Navbar() {
                 )}
               </div>
               <button onClick={handleLogout} className="btn btn-secondary" style={styles.logoutBtn}>
-                <LogOut size={16} /> Logout
+                <LogOut size={15} /> Logout
               </button>
-            </div>
-          ) : (
-            <div style={styles.authBtnGroup}>
-              <Link to="/login" className="btn btn-secondary">
-                Log In
-              </Link>
-              <Link to="/register" className="btn btn-primary">
-                Sign Up
-              </Link>
             </div>
           )}
         </div>
@@ -56,17 +47,21 @@ export default function Navbar() {
 
 const styles = {
   header: {
-    background: 'rgba(11, 13, 25, 0.8)',
+    height: '65px',
+    background: 'rgba(11, 13, 25, 0.85)',
     backdropFilter: 'blur(12px)',
     borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
     position: 'sticky',
     top: 0,
-    zIndex: 100
+    zIndex: 100,
+    display: 'flex',
+    alignItems: 'center'
   },
   container: {
+    width: '100%',
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: '16px 24px',
+    padding: '0 24px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between'
@@ -74,11 +69,11 @@ const styles = {
   logo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px'
+    gap: '8px'
   },
   logoText: {
     fontFamily: 'var(--font-heading)',
-    fontSize: '1.6rem',
+    fontSize: '1.5rem',
     fontWeight: '800',
     background: 'linear-gradient(135deg, #ffffff 0%, #a29bfe 100%)',
     WebkitBackgroundClip: 'text',
@@ -92,25 +87,20 @@ const styles = {
   userInfo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px'
+    gap: '16px'
   },
   userBadgeGroup: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px'
+    gap: '8px'
   },
   userName: {
     fontWeight: '600',
-    fontSize: '0.95rem',
+    fontSize: '0.9rem',
     color: '#ffffff'
   },
   logoutBtn: {
-    padding: '8px 16px',
-    fontSize: '0.9rem'
-  },
-  authBtnGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
+    padding: '6px 14px',
+    fontSize: '0.85rem'
   }
 };

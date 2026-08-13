@@ -5,6 +5,24 @@ import { query } from '../config/db.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'qizzy_jwt_secret_key_2026_super_secure';
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || 'qizzy2026admin';
 
+const ALLOWED_EMAIL_DOMAINS = ['@gmail.com', '@student.cadt.edu.kh', '@outlook.com'];
+
+// Helper to validate password complexity
+function validatePassword(password) {
+  if (!password || password.length < 6) return false;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  return hasUpper && hasLower && hasNumber && hasSpecial;
+}
+
+// Helper to validate email domain
+function validateEmailDomain(email) {
+  const emailLower = email.toLowerCase().trim();
+  return ALLOWED_EMAIL_DOMAINS.some(domain => emailLower.endsWith(domain));
+}
+
 // Helper to generate JWT token
 function generateToken(user) {
   return jwt.sign(
@@ -26,7 +44,21 @@ export async function register(req, res) {
     const { name, email, password, role = 'student', adminPasscode } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Please provide name, email, and password.' });
+      return res.status(400).json({ message: 'Please fill in all required fields.' });
+    }
+
+    // Email Domain Validation
+    if (!validateEmailDomain(email)) {
+      return res.status(400).json({
+        message: 'Accepted Domains: @gmail.com, @student.cadt.edu.kh, or @outlook.com.'
+      });
+    }
+
+    // Password Complexity Validation
+    if (!validatePassword(password)) {
+      return res.status(400).json({
+        message: 'Password must be at least 6 characters long and include an uppercase letter, lowercase letter, number, and special character.'
+      });
     }
 
     // Role validation & Admin Passcode Check
@@ -146,5 +178,17 @@ export async function getMe(req, res) {
   } catch (error) {
     console.error('GetMe Error:', error);
     return res.status(500).json({ message: 'Server error fetching user profile.', error: error.message });
+  }
+}
+
+// Clear all user records for reset
+export async function clearUsers(req, res) {
+  try {
+    await query('DELETE FROM player_answers');
+    await query('DELETE FROM session_players');
+    await query('DELETE FROM users');
+    return res.json({ message: 'All user records cleared successfully.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error clearing users', error: error.message });
   }
 }

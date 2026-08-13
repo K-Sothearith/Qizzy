@@ -16,22 +16,22 @@ export default function StudentDashboard() {
 
   return (
     <div style={styles.container}>
-      {/* Welcome Banner */}
+      {/* Compact Welcome Banner */}
       <div className="glass-panel" style={styles.banner}>
         <div>
           <h1 style={styles.bannerTitle}>Welcome back, {user?.name}! 👋</h1>
           <p style={styles.bannerSubtitle}>Ready to test your knowledge and climb the leaderboard?</p>
         </div>
-        <span className="badge badge-student" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
+        <span className="badge badge-student">
           Student Account
         </span>
       </div>
 
-      {/* Quick Stats Grid */}
+      {/* Compact Quick Stats Grid */}
       <div style={styles.statsGrid}>
         <div className="glass-card" style={styles.statCard}>
           <div style={{ ...styles.statIconCircle, background: 'rgba(255, 118, 117, 0.15)', color: '#ff7675' }}>
-            <Trophy size={24} />
+            <Trophy size={18} />
           </div>
           <div>
             <div style={styles.statLabel}>Total Score</div>
@@ -41,7 +41,7 @@ export default function StudentDashboard() {
 
         <div className="glass-card" style={styles.statCard}>
           <div style={{ ...styles.statIconCircle, background: 'rgba(0, 206, 201, 0.15)', color: '#00cec9' }}>
-            <Award size={24} />
+            <Award size={18} />
           </div>
           <div>
             <div style={styles.statLabel}>Average Score</div>
@@ -51,7 +51,7 @@ export default function StudentDashboard() {
 
         <div className="glass-card" style={styles.statCard}>
           <div style={{ ...styles.statIconCircle, background: 'rgba(162, 155, 254, 0.15)', color: '#a29bfe' }}>
-            <Target size={24} />
+            <Target size={18} />
           </div>
           <div>
             <div style={styles.statLabel}>Quizzes Played</div>
@@ -60,13 +60,13 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Join Game Card */}
+      {/* Refined & Compact Join Game Card */}
       <div className="glass-panel" style={styles.joinCard}>
         <div style={styles.joinHeader}>
-          <Gamepad2 size={32} color="#00cec9" />
-          <h2 style={{ fontSize: '1.6rem' }}>Join a Live Quiz</h2>
+          <Gamepad2 size={24} color="#00cec9" />
+          <h2 style={{ fontSize: '1.25rem' }}>Join a Live Quiz</h2>
         </div>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '18px', fontSize: '0.88rem' }}>
           Enter the 6-digit Game PIN displayed on your teacher's screen or scan the QR Code:
         </p>
 
@@ -75,14 +75,14 @@ export default function StudentDashboard() {
             type="text"
             className="form-input"
             style={styles.pinInput}
-            placeholder="ENTER GAME PIN"
+            placeholder="GAME PIN"
             maxLength={6}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
             required
           />
           <button type="submit" className="btn btn-accent" style={styles.joinBtn}>
-            <Play size={20} /> Join Game
+            <Play size={16} /> Join Game
           </button>
         </form>
       </div>
@@ -92,90 +92,91 @@ export default function StudentDashboard() {
 
 const styles = {
   container: {
-    maxWidth: '1050px',
+    maxWidth: '950px',
     margin: '0 auto',
-    padding: '36px 24px'
+    padding: '24px 20px'
   },
   banner: {
-    padding: '32px',
-    marginBottom: '28px',
+    padding: '20px 24px',
+    marginBottom: '20px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    gap: '16px'
+    gap: '12px'
   },
   bannerTitle: {
-    fontSize: '2.1rem',
-    marginBottom: '6px'
+    fontSize: '1.5rem',
+    marginBottom: '4px'
   },
   bannerSubtitle: {
     color: 'var(--text-muted)',
-    fontSize: '1rem'
+    fontSize: '0.88rem'
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '20px',
-    marginBottom: '36px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '16px',
+    marginBottom: '24px'
   },
   statCard: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px'
+    gap: '14px',
+    padding: '14px 18px'
   },
   statIconCircle: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '14px',
+    width: '42px',
+    height: '42px',
+    borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0
   },
   statLabel: {
-    fontSize: '0.85rem',
+    fontSize: '0.78rem',
     fontWeight: '600',
     color: 'var(--text-muted)',
     textTransform: 'uppercase',
     letterSpacing: '0.5px'
   },
   statValue: {
-    fontSize: '1.6rem',
+    fontSize: '1.35rem',
     fontWeight: '800',
     fontFamily: 'var(--font-heading)',
-    marginTop: '2px'
+    marginTop: '1px'
   },
   joinCard: {
-    padding: '40px',
+    padding: '28px 24px',
     textAlign: 'center',
-    maxWidth: '600px',
+    maxWidth: '460px',
     margin: '0 auto'
   },
   joinHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '12px',
-    marginBottom: '8px'
+    gap: '10px',
+    marginBottom: '6px'
   },
   joinForm: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
-    maxWidth: '400px',
+    gap: '12px',
+    maxWidth: '340px',
     margin: '0 auto'
   },
   pinInput: {
-    fontSize: '1.6rem',
+    fontSize: '1.3rem',
     fontWeight: '800',
-    letterSpacing: '4px',
+    letterSpacing: '3px',
     textAlign: 'center',
-    padding: '16px',
+    padding: '12px',
     textTransform: 'uppercase'
   },
   joinBtn: {
-    padding: '16px',
-    fontSize: '1.1rem'
+    padding: '12px',
+    fontSize: '0.98rem'
   }
 };
