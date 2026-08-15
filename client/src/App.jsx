@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import QuizEditor from './pages/QuizEditor';
 import './index.css';
 
 // Guard for authenticated users
@@ -23,6 +24,31 @@ function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+// Guard strictly for Admin users
+function AdminRoute({ children }) {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={styles.loadingScreen}>
+        <div className="glass-panel" style={{ padding: '30px 50px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.4rem' }}>Loading Qizzy...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -56,6 +82,24 @@ export default function App() {
                   <ProtectedRoute>
                     <DashboardRouter />
                   </ProtectedRoute>
+                }
+              />
+
+              {/* Admin Quiz Builder Routes */}
+              <Route
+                path="/quizzes/new"
+                element={
+                  <AdminRoute>
+                    <QuizEditor />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/quizzes/:id/edit"
+                element={
+                  <AdminRoute>
+                    <QuizEditor />
+                  </AdminRoute>
                 }
               />
 

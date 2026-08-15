@@ -308,39 +308,79 @@ This project is open-source and intended for educational and teaching purposes.
 
 --
 
-## 🎯 Sprint Breakdown
-### 🟢 Sprint 1: Core Foundation & Role-Based Auth (Proposed for Immediate Execution)
-Backend (server/):
-MySQL connection pool (src/config/db.js).
-JWT verification & Role-Based Access Control (src/middlewares/authMiddleware.js).
-Authentication Endpoints (src/controllers/authController.js & src/routes/authRoutes.js):
-Signup: Handles role='student' and role='admin'. Validates ADMIN_PASSCODE against .env when Admin is selected. Hashes passwords with bcryptjs.
-Login: Authenticates credentials, returns signed JWT containing userId, role, name, email.
-Profile endpoint (/api/auth/me): Fetches current user profile and stats.
-Express server integration (src/server.js) with CORS & JSON body parsing.
-Frontend (client/):
-Global Design System (src/index.css) — Dark glassmorphic theme, vibrant color variables, modern typography (Outfit/Inter), responsive layout reset.
-Auth Context & Token Management (src/context/AuthContext.jsx).
-Router setup (src/App.jsx) with protected routes (ProtectedRoute for logged-in users, AdminRoute for Admin users).
-Login View (src/pages/Login.jsx).
-Register View (src/pages/Register.jsx) featuring dynamic role selector (Student/Admin) and smooth slide-in for the secret Admin Passcode field.
-Basic Dashboard Layouts & Placeholders (src/pages/StudentDashboard.jsx, src/pages/AdminDashboard.jsx).
-### 🔵 Sprint 2: Admin Quiz Builder & Management
-Backend:
-Quiz CRUD API (src/controllers/quizController.js & src/routes/quizRoutes.js).
-Endpoints for creating, updating, deleting quizzes, questions, and options.
-Restricted strictly to users with role='admin'.
-Frontend:
-Admin Quiz Library View (AdminDashboard.jsx).
-Visual Quiz Builder (src/pages/QuizEditor.jsx): Interactive question cards, 4 color/shape option inputs (Red Triangle, Blue Diamond, Yellow Circle, Green Square), time limit selector (10s, 20s, 30s, 60s), base point settings.
-### 🟣 Sprint 3: Real-Time Engine, Socket.io & Live Gameplay
-Backend:
-Socket.io server engine (src/sockets/gameSocket.js): Room PIN creation, student JWT room joining, synchronized question timer, response handling, Kahoot speed-based scoring math, leaderboard computation, and saving scores to MySQL database.
-Frontend:
-Host Room (src/pages/HostRoom.jsx): Projector view with Room PIN, Dynamic QRCode (qrcode.react), live student lobby, question countdown, response chart, top 5 leaderboard, and 3D confetti podium (canvas-confetti).
-Player Room (src/pages/PlayerRoom.jsx): QR Code auto-join URL handler (/join?pin=849201), nickname entry, 4-color shape controller grid, instant feedback & streak counter.
-### 🟡 Sprint 4: Student Analytics, UX Polish & Audio/Visual Effects
-Frontend:
-Student Dashboard analytics (total_score, avg_score, quizzes_played, completed quiz history).
-Sound FX audio toggle (quiz lobby music, countdown tick, correct/incorrect chimes).
-Mobile UI & edge-case error handling polish.
+## 🎯 Sprint Breakdown & Roadmap
+
+### 🟢 Sprint 1: Core Foundation & Role-Based Auth (Completed ✅)
+* **Backend (`server/`)**:
+  * Cloud MySQL connection pool with auto-initialization (`src/config/db.js`).
+  * JWT verification & RBAC middlewares (`src/middlewares/authMiddleware.js`).
+  * Authentication Endpoints (`/api/auth/register`, `/api/auth/login`, `/api/auth/me`):
+    * Role-based registration (`student` vs `admin`).
+    * Secret `ADMIN_PASSCODE` verification for Teacher/Admin registrations.
+    * Secure password hashing with `bcryptjs`.
+  * Express server integration (`src/server.js`) with CORS and JSON parsing.
+* **Frontend (`client/`)**:
+  * Global Design System (`src/index.css`) — Dark glassmorphic theme, Kahoot color palette, typography (Outfit & Plus Jakarta Sans).
+  * Auth Context & JWT persistence (`src/context/AuthContext.jsx`).
+  * Navigation bar & role routing (`src/App.jsx`, `src/components/Navbar.jsx`).
+  * Login & Register screens (`src/pages/Login.jsx`, `src/pages/Register.jsx`) with dynamic passcode reveal.
+
+---
+
+### 🔵 Sprint 2: Admin Quiz Builder & Management (Completed ✅)
+* **Backend (`server/`)**:
+  * Quiz CRUD API (`/api/quizzes`, `src/controllers/quizController.js`, `src/routes/quizRoutes.js`):
+    * `GET /api/quizzes`: Retrieves admin's quizzes with aggregated question counts, total points, and estimated duration.
+    * `GET /api/quizzes/:id`: Retrieves complete quiz tree (quiz meta, questions, options).
+    * `POST /api/quizzes` & `PUT /api/quizzes/:id`: Atomic MySQL transaction management for creating/updating quizzes with questions and options.
+    * `DELETE /api/quizzes/:id`: Cascade deletion of quiz components with ownership verification.
+    * Strict single-correct-answer validation across question options.
+* **Frontend (`client/`)**:
+  * **Admin Quiz Library (`src/pages/AdminDashboard.jsx`)**:
+    * Dynamic quiz card grid with cover images, question count badges, duration and point counters.
+    * Real-time search filtering by quiz title and description.
+    * Modal-based deletion confirmation and direct navigation to create/edit.
+  * **Visual Quiz Studio (`src/pages/QuizEditor.jsx`)**:
+    * Left question strip with thumbnail previews, question reordering (Up/Down), duplicate, and delete actions.
+    * Question type selector (`Multiple Choice` and `True / False`).
+    * Countdown timer selector pills (`10s`, `20s`, `30s`, `60s`, `90s`, `120s`).
+    * Base point configuration pills (`Standard 1,000`, `Double 2,000`, `No Points 0`).
+    * Iconic Kahoot 4-color shape inputs (▲ Red Triangle, ◆ Blue Diamond, ● Yellow Circle, ■ Green Square).
+    * **Single-choice radio selection mode**: Clicking an option checkmark exclusively locks that option as the single correct answer.
+    * Quiz settings modal (title, description, cover image URL preview).
+
+---
+
+### 🟣 Sprint 3: Real-Time Engine, Socket.io & Live Gameplay (Next Up 🚀)
+* **Backend (`server/`)**:
+  * **Socket.io Game Room Engine (`src/sockets/gameSocket.js`)**:
+    * Room PIN generator (unique 6-digit codes) & session state store (`game_sessions`).
+    * Room joining with student JWT verification and nickname registration (`session_players`).
+    * Authoritative server-side question countdown timer and game state machine (`lobby` $\rightarrow$ `question_active` $\rightarrow$ `answer_reveal` $\rightarrow$ `leaderboard` $\rightarrow$ `game_over`).
+    * Real-time single-tap answer submission & response time capture (`player_answers`).
+    * **Speed Scoring Calculation**: $Base \times \left(1 - \frac{\text{Response Time}}{2 \times \text{Time Limit}}\right)$.
+    * Leaderboard score accumulation, streak bonuses, and dynamic rank computation.
+    * Final game settlement: commits total player scores to database and updates `users.total_score`, `users.avg_score`, and `users.quizzes_played`.
+* **Frontend (`client/`)**:
+  * **Host Projector Room (`src/pages/HostRoom.jsx`)**:
+    * Big 6-digit Game PIN display and dynamic QR Code generation with `qrcode.react`.
+    * Live player lobby showing real-time student avatars & joined count.
+    * Live synchronized countdown clock and real-time response submission counter.
+    * Answer reveal screen displaying correct answer and dynamic response distribution bar chart.
+    * Top 5 Leaderboard podium slide between questions.
+    * Final Podium celebration view (1st, 2nd, and 3rd place with `canvas-confetti` fireworks).
+  * **Student Player Controller (`src/pages/PlayerRoom.jsx`)**:
+    * Game PIN entry & QR Code auto-join URL handler (`/join?pin=XXXXXX`).
+    * Synchronized player controller with the 4 high-contrast color/shape buttons.
+    * **Single-tap answer lock-in & playful waiting screens** (*"Fast as a bullet, huh?"*, *"Feeling confident? 😎"*, *"Genius at work..."*, *"Fingers crossed! 🤞"*).
+    * Instant round feedback slide (points gained, streak indicator, accuracy chime visual, current leaderboard placement).
+    * Final placement summary card.
+
+---
+
+### 🟡 Sprint 4: Student Analytics, Audio FX & System Polish
+* **Frontend (`client/`)**:
+  * Student Dashboard analytics view (cumulative total points, average points/quiz, quizzes completed, and past session history).
+  * Sound FX audio engine (lobby ambient music, countdown ticking audio, correct/incorrect celebration chimes).
+  * Mobile viewport responsiveness and edge-case reconnect handling.
+
