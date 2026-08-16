@@ -1033,3 +1033,520 @@ h1, h2, h3, h4 {
     grid-template-columns: 1fr;
   }
 }
+
+/* =================================================== */
+/* 🟣 Sprint 3: Host Projector Room Styles             */
+/* =================================================== */
+
+.host-screen-container {
+  min-height: calc(100vh - 65px);
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 20%, #171b30 0%, #0b0d19 100%);
+  padding: 24px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Host Lobby */
+.host-lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  margin-bottom: 28px;
+  background: var(--bg-glass);
+}
+
+.pin-display-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pin-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.pin-number {
+  font-size: 3.2rem;
+  font-weight: 900;
+  font-family: var(--font-heading);
+  letter-spacing: 6px;
+  color: #00cec9;
+  text-shadow: 0 0 20px var(--secondary-glow);
+  line-height: 1;
+}
+
+.host-lobby-body {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 28px;
+  flex: 1;
+}
+
+.qr-code-card {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.qr-box {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.players-lobby-panel {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.players-lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-glass);
+  margin-bottom: 20px;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+  overflow-y: auto;
+  max-height: 440px;
+  padding-right: 6px;
+}
+
+.player-lobby-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.player-avatar-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #ffffff;
+}
+
+.player-name-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Get Ready 3-2-1 Screen */
+.get-ready-screen {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+}
+
+.countdown-pulse-number {
+  font-size: 6rem;
+  font-weight: 900;
+  font-family: var(--font-heading);
+  color: #00cec9;
+  text-shadow: 0 0 35px var(--secondary-glow);
+  animation: pulseScale 1s infinite;
+}
+
+/* Question Screen (Host) */
+.host-question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 12px 24px;
+  background: var(--bg-glass);
+}
+
+.host-timer-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 4px solid #6c5ce7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  font-family: var(--font-heading);
+  box-shadow: 0 0 20px var(--primary-glow);
+  transition: all 0.3s ease;
+}
+
+.host-timer-circle.warning {
+  border-color: #f39c12;
+  box-shadow: 0 0 20px rgba(243, 156, 18, 0.4);
+  color: #f39c12;
+}
+
+.host-timer-circle.danger {
+  border-color: #e74c3c;
+  box-shadow: 0 0 25px rgba(231, 76, 60, 0.6);
+  color: #e74c3c;
+  animation: pulseScale 0.5s infinite;
+}
+
+.host-question-box {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 18px;
+  padding: 32px;
+  text-align: center;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.host-question-text {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #ffffff;
+}
+
+.host-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  flex: 1;
+}
+
+.host-option-card {
+  padding: 24px 28px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s ease;
+}
+
+.host-option-card.dimmed {
+  opacity: 0.35;
+  filter: grayscale(0.6);
+}
+
+.host-option-card.correct-highlight {
+  box-shadow: 0 0 30px rgba(46, 204, 113, 0.8), 0 0 10px #ffffff;
+  border: 2px solid #ffffff;
+  transform: scale(1.02);
+}
+
+.host-option-text {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Answer Reveal & Distribution Bar Chart */
+.answer-chart-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 32px;
+  height: 240px;
+  padding: 20px 40px;
+  margin-bottom: 24px;
+}
+
+.chart-bar-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 90px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  border-radius: 10px 10px 4px 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #ffffff;
+  transition: height 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Leaderboard */
+.leaderboard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  animation: slideInUp 0.4s ease forwards;
+  transition: all 0.2s ease;
+}
+
+.leaderboard-row:hover {
+  transform: scale(1.01);
+  border-color: var(--primary);
+}
+
+.leaderboard-rank-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-family: var(--font-heading);
+}
+
+.leaderboard-row.rank-1 .leaderboard-rank-badge {
+  background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+  color: #000000;
+}
+
+.leaderboard-row.rank-2 .leaderboard-rank-badge {
+  background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+  color: #000000;
+}
+
+.leaderboard-row.rank-3 .leaderboard-rank-badge {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+  color: #ffffff;
+}
+
+/* 3D Podium Celebration Screen */
+.podium-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 20px;
+  height: 360px;
+  margin-top: 30px;
+}
+
+.podium-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 180px;
+  animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.podium-player-card {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.podium-step {
+  width: 100%;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 900;
+  font-family: var(--font-heading);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.podium-first {
+  height: 220px;
+  background: linear-gradient(180deg, #f1c40f 0%, #d68910 100%);
+  color: #000000;
+}
+
+.podium-second {
+  height: 160px;
+  background: linear-gradient(180deg, #bdc3c7 0%, #7f8c8d 100%);
+  color: #000000;
+}
+
+.podium-third {
+  height: 120px;
+  background: linear-gradient(180deg, #e67e22 0%, #a04000 100%);
+  color: #ffffff;
+}
+
+/* =================================================== */
+/* 📱 Sprint 3: Student Player Controller Styles       */
+/* =================================================== */
+
+.player-controller-container {
+  min-height: calc(100vh - 65px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-dark);
+  position: relative;
+}
+
+/* Player Controller Buttons Grid */
+.player-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+  padding: 14px;
+}
+
+.player-buttons-grid.tf-mode {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+.player-btn-controller {
+  border: none;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease, filter 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.player-btn-controller:active {
+  transform: scale(0.96);
+  filter: brightness(1.2);
+}
+
+.player-btn-controller svg {
+  width: 56px;
+  height: 56px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}
+
+/* Witty Waiting Screen */
+.player-waiting-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  gap: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.lock-badge-icon {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(108, 92, 231, 0.2);
+  border: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a29bfe;
+  box-shadow: 0 0 25px var(--primary-glow);
+  animation: pulseScale 2s infinite;
+}
+
+.witty-quote-text {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  max-width: 440px;
+  line-height: 1.4;
+}
+
+/* Round Result Feedback */
+.round-feedback-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  gap: 16px;
+  animation: popIn 0.3s ease;
+}
+
+.feedback-correct {
+  background: radial-gradient(circle at 50% 30%, rgba(39, 174, 96, 0.35) 0%, var(--bg-dark) 80%);
+}
+
+.feedback-incorrect {
+  background: radial-gradient(circle at 50% 30%, rgba(231, 76, 60, 0.35) 0%, var(--bg-dark) 80%);
+}
+
+/* Animations */
+@keyframes popIn {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulseScale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slideInUp {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+

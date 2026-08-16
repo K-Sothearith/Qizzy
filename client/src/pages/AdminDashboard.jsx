@@ -211,7 +211,7 @@ export default function AdminDashboard() {
                   <div className="quiz-card-actions">
                     <button
                       className="btn btn-accent"
-                      onClick={() => alert(`Launching live session for "${quiz.title}"! (Sprint 3 Live Room integration coming next)`)}
+                      onClick={() => navigate(`/host/${quiz.id}`)}
                       title="Host Live Game"
                     >
                       <Play size={16} /> Host

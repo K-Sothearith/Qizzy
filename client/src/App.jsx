@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import QuizEditor from './pages/QuizEditor';
+import HostRoom from './pages/HostRoom';
+import PlayerRoom from './pages/PlayerRoom';
 import './index.css';
 
 // Guard for authenticated users
@@ -100,6 +102,32 @@ export default function App() {
                   <AdminRoute>
                     <QuizEditor />
                   </AdminRoute>
+                }
+              />
+
+              {/* Live Gameplay Routes */}
+              <Route
+                path="/host/:quizId"
+                element={
+                  <AdminRoute>
+                    <HostRoom />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/join"
+                element={
+                  <ProtectedRoute>
+                    <PlayerRoom />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/play"
+                element={
+                  <ProtectedRoute>
+                    <PlayerRoom />
+                  </ProtectedRoute>
                 }
               />
 

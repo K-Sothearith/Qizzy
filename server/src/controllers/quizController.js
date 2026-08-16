@@ -220,13 +220,21 @@ export async function createQuiz(req, res) {
       quizId
     });
   } catch (error) {
-    await connection.rollback();
+    try {
+      await connection.rollback();
+    } catch (rbErr) {
+      // ignore rollback error if connection is closed
+    }
     console.error('Error creating quiz:', error);
     return res.status(500).json({
       message: 'Failed to create quiz due to a server error.'
     });
   } finally {
-    connection.release();
+    try {
+      connection.release();
+    } catch (relErr) {
+      // ignore
+    }
   }
 }
 
@@ -333,13 +341,21 @@ export async function updateQuiz(req, res) {
       quizId
     });
   } catch (error) {
-    await connection.rollback();
+    try {
+      await connection.rollback();
+    } catch (rbErr) {
+      // ignore
+    }
     console.error('Error updating quiz:', error);
     return res.status(500).json({
       message: 'Failed to update quiz due to a server error.'
     });
   } finally {
-    connection.release();
+    try {
+      connection.release();
+    } catch (relErr) {
+      // ignore
+    }
   }
 }
 
