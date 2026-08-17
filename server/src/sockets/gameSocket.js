@@ -642,16 +642,18 @@ function sendQuestion(io, room) {
     totalPlayers: room.players.size
   });
 
-  // Payload for Player screen (colored buttons)
+  // Payload for Player screen (with full question prompt, timer, and option texts)
   for (const [sId, p] of room.players.entries()) {
     io.to(sId).emit('player:question_start', {
       questionIndex: room.currentQuestionIndex,
       totalQuestions: room.questions.length,
+      questionText: currentQ.question_text,
       questionType: currentQ.question_type,
       timeSeconds: currentQ.time_seconds || 20,
       points: currentQ.points || 1000,
       options: currentQ.options.map(opt => ({
         id: opt.id,
+        option_text: opt.option_text,
         color_shape: opt.color_shape
       }))
     });

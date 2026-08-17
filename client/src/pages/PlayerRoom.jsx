@@ -16,7 +16,9 @@ import {
   Diamond, 
   Circle, 
   Square,
-  Sparkles
+  Clock,
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 
 export default function PlayerRoom() {
@@ -31,6 +33,7 @@ export default function PlayerRoom() {
   const [roomTitle, setRoomTitle] = useState('');
   const [countdown, setCountdown] = useState(3);
   const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState(0);
   const [lockedQuote, setLockedQuote] = useState('');
   const [roundResult, setRoundResult] = useState(null);
@@ -50,9 +53,14 @@ export default function PlayerRoom() {
 
     socket.on('player:question_start', (data) => {
       setCurrentQuestion(data);
+      setTimeLeft(data.timeSeconds || 20);
       setQuestionStartTime(Date.now());
       setPhase('question');
       setLockedQuote('');
+    });
+
+    socket.on('game:timer_tick', (data) => {
+      setTimeLeft(data.timeLeft);
     });
 
     socket.on('game:question_time_up', () => {
@@ -86,6 +94,7 @@ export default function PlayerRoom() {
     return () => {
       socket.off('game:starting');
       socket.off('player:question_start');
+      socket.off('game:timer_tick');
       socket.off('game:question_time_up');
       socket.off('player:round_result');
       socket.off('game:leaderboard_update');
@@ -143,11 +152,11 @@ export default function PlayerRoom() {
 
   const renderShapeIcon = (colorShape) => {
     switch (colorShape) {
-      case 'red_triangle': return <Triangle size={48} fill="currentColor" />;
-      case 'blue_diamond': return <Diamond size={48} fill="currentColor" />;
-      case 'yellow_circle': return <Circle size={48} fill="currentColor" />;
-      case 'green_square': return <Square size={48} fill="currentColor" />;
-      default: return <Triangle size={48} fill="currentColor" />;
+      case 'red_triangle': return <Triangle size={28} fill="currentColor" />;
+      case 'blue_diamond': return <Diamond size={28} fill="currentColor" />;
+      case 'yellow_circle': return <Circle size={28} fill="currentColor" />;
+      case 'green_square': return <Square size={28} fill="currentColor" />;
+      default: return <Triangle size={28} fill="currentColor" />;
     }
   };
 
@@ -168,13 +177,13 @@ export default function PlayerRoom() {
       {/* ======================================================== */}
       {phase === 'join' && (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '32px 28px', textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
-              <Gamepad2 size={32} color="#00cec9" />
-              <h1 style={{ fontSize: '1.8rem' }}>Join Qizzy</h1>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '36px 30px', textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '12px' }}>
+              <Gamepad2 size={34} color="#00cec9" />
+              <h1 style={{ fontSize: '1.9rem' }}>Join Qizzy</h1>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
-              Enter the Game PIN from the host projector:
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '24px' }}>
+              Enter the Game PIN from the teacher's screen:
             </p>
 
             {error && (
@@ -183,7 +192,7 @@ export default function PlayerRoom() {
               </div>
             )}
 
-            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>6-Digit Game PIN</label>
                 <input
@@ -191,7 +200,7 @@ export default function PlayerRoom() {
                   className="form-input"
                   placeholder="e.g. 849201"
                   maxLength={6}
-                  style={{ fontSize: '1.3rem', fontWeight: 800, textAlign: 'center', letterSpacing: '4px' }}
+                  style={{ fontSize: '1.35rem', fontWeight: 800, textAlign: 'center', letterSpacing: '5px' }}
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                   required
@@ -211,7 +220,7 @@ export default function PlayerRoom() {
                 />
               </div>
 
-              <button type="submit" className="btn btn-accent" style={{ padding: '12px', fontSize: '1.05rem', marginTop: '6px' }}>
+              <button type="submit" className="btn btn-accent" style={{ padding: '13px', fontSize: '1.05rem', marginTop: '6px' }}>
                 <Play size={18} /> Enter Game
               </button>
             </form>
@@ -224,17 +233,17 @@ export default function PlayerRoom() {
       {/* ======================================================== */}
       {phase === 'lobby' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
-          <div className="glass-panel" style={{ padding: '40px 32px', maxWidth: '440px', width: '100%' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #00cec9 0%, #0984e3 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '2rem', fontWeight: 900, color: '#ffffff', boxShadow: '0 0 25px var(--secondary-glow)' }}>
+          <div className="glass-panel" style={{ padding: '44px 36px', maxWidth: '460px', width: '100%' }}>
+            <div style={{ width: '88px', height: '88px', borderRadius: '50%', background: 'linear-gradient(135deg, #00cec9 0%, #0984e3 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 22px', fontSize: '2.2rem', fontWeight: 900, color: '#ffffff', boxShadow: '0 0 30px var(--secondary-glow)' }}>
               {nickname.charAt(0).toUpperCase()}
             </div>
 
-            <h2 style={{ fontSize: '1.6rem', marginBottom: '8px', color: '#ffffff' }}>You're in, {nickname}! 🎉</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '1.75rem', marginBottom: '8px', color: '#ffffff' }}>You're in, {nickname}! 🎉</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '26px' }}>
               Look up at the teacher's screen. The quiz will start shortly!
             </p>
 
-            <div className="badge badge-student" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
+            <div className="badge badge-student" style={{ padding: '8px 20px', fontSize: '0.88rem' }}>
               Room: {roomTitle}
             </div>
           </div>
@@ -246,7 +255,7 @@ export default function PlayerRoom() {
       {/* ======================================================== */}
       {phase === 'get_ready' && (
         <div className="get-ready-screen">
-          <h2 style={{ fontSize: '2rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '3px' }}>
+          <h2 style={{ fontSize: '2.2rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '3px' }}>
             Get Ready!
           </h2>
           <div className="countdown-pulse-number">{countdown}</div>
@@ -254,19 +263,52 @@ export default function PlayerRoom() {
       )}
 
       {/* ======================================================== */}
-      {/* 4. ACTIVE QUESTION (4-COLOR CONTROLLER)                  */}
+      {/* 4. ACTIVE QUESTION (PREMIUM ADMIN-INSPIRED DESIGN)       */}
       {/* ======================================================== */}
       {phase === 'question' && currentQuestion && (
-        <div className={`player-buttons-grid ${currentQuestion.questionType === 'true_false' ? 'tf-mode' : ''}`}>
-          {currentQuestion.options.map((opt) => (
-            <button
-              key={opt.id}
-              className={`player-btn-controller ${getColorClass(opt.color_shape)}`}
-              onClick={() => handleSelectOption(opt.id)}
-            >
-              {renderShapeIcon(opt.color_shape)}
-            </button>
-          ))}
+        <div className="player-question-container">
+          {/* Top Bar: Question Index & Circular Glow Timer */}
+          <div className="glass-panel player-top-status-bar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="badge badge-student" style={{ fontSize: '0.85rem' }}>
+                Question {currentQuestion.questionIndex + 1} of {currentQuestion.totalQuestions}
+              </span>
+              <span className="badge" style={{ background: 'rgba(243, 156, 18, 0.15)', color: '#f39c12', border: '1px solid rgba(243, 156, 18, 0.3)' }}>
+                🏆 {currentQuestion.points || 1000} pts
+              </span>
+            </div>
+
+            {/* Glowing Circular Timer */}
+            <div className={`player-timer-circle ${timeLeft <= 5 ? 'danger' : timeLeft <= 10 ? 'warning' : ''}`}>
+              {timeLeft}
+            </div>
+          </div>
+
+          {/* Big Prominent Question Prompt Box */}
+          <div className="glass-panel player-prompt-card">
+            <h2 className="player-prompt-text">
+              {currentQuestion.questionText}
+            </h2>
+          </div>
+
+          {/* 4 Colored Answer Cards Grid */}
+          <div className={`player-options-grid ${currentQuestion.questionType === 'true_false' ? 'tf-mode' : ''}`}>
+            {currentQuestion.options.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`player-option-card ${getColorClass(opt.color_shape)}`}
+                onClick={() => handleSelectOption(opt.id)}
+              >
+                <div className="shape-badge">
+                  {renderShapeIcon(opt.color_shape)}
+                </div>
+                <div className="player-option-text">
+                  {opt.option_text}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -276,7 +318,7 @@ export default function PlayerRoom() {
       {phase === 'locked' && (
         <div className="player-waiting-screen">
           <div className="lock-badge-icon">
-            <Lock size={44} strokeWidth={2.5} />
+            <Lock size={46} strokeWidth={2.5} />
           </div>
 
           <h2 className="witty-quote-text">
@@ -294,34 +336,34 @@ export default function PlayerRoom() {
       {/* ======================================================== */}
       {phase === 'feedback' && roundResult && (
         <div className={`round-feedback-screen ${roundResult.isCorrect ? 'feedback-correct' : 'feedback-incorrect'}`}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: roundResult.isCorrect ? '#27ae60' : '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', boxShadow: roundResult.isCorrect ? '0 0 25px rgba(39, 174, 96, 0.6)' : '0 0 25px rgba(231, 76, 60, 0.6)' }}>
-            {roundResult.isCorrect ? <Check size={48} strokeWidth={4} /> : <X size={48} strokeWidth={4} />}
+          <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: roundResult.isCorrect ? '#27ae60' : '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', boxShadow: roundResult.isCorrect ? '0 0 30px rgba(39, 174, 96, 0.6)' : '0 0 30px rgba(231, 76, 60, 0.6)' }}>
+            {roundResult.isCorrect ? <Check size={52} strokeWidth={4} /> : <X size={52} strokeWidth={4} />}
           </div>
 
-          <h1 style={{ fontSize: '2.2rem', color: '#ffffff', fontWeight: 900 }}>
+          <h1 style={{ fontSize: '2.4rem', color: '#ffffff', fontWeight: 900 }}>
             {roundResult.isCorrect ? 'Correct!' : 'Incorrect'}
           </h1>
 
           {roundResult.isCorrect ? (
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2ecc71' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2ecc71' }}>
               +{roundResult.pointsEarned.toLocaleString()} pts
             </div>
           ) : (
-            <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '1.05rem', color: 'var(--text-muted)' }}>
               +0 pts
             </div>
           )}
 
           {roundResult.streak >= 2 && (
-            <div className="badge" style={{ background: 'rgba(231, 76, 60, 0.2)', color: '#ff7675', border: '1px solid rgba(231, 76, 60, 0.4)', padding: '6px 14px', fontSize: '0.85rem' }}>
+            <div className="badge" style={{ background: 'rgba(231, 76, 60, 0.2)', color: '#ff7675', border: '1px solid rgba(231, 76, 60, 0.4)', padding: '7px 16px', fontSize: '0.9rem' }}>
               <Flame size={16} color="#e74c3c" /> Answer Streak: {roundResult.streak} 🔥
             </div>
           )}
 
-          <div style={{ marginTop: '16px', padding: '12px 24px', background: 'rgba(0, 0, 0, 0.4)', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Current Standing: </span>
-            <strong style={{ fontSize: '1.1rem', color: '#00cec9' }}>#{roundResult.rank} Place</strong>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+          <div style={{ marginTop: '18px', padding: '14px 28px', background: 'rgba(0, 0, 0, 0.45)', borderRadius: '14px', border: '1px solid var(--border-glass)' }}>
+            <span style={{ fontSize: '0.92rem', color: 'var(--text-muted)' }}>Current Standing: </span>
+            <strong style={{ fontSize: '1.2rem', color: '#00cec9' }}>#{roundResult.rank} Place</strong>
+            <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginTop: '4px' }}>
               Total Score: {roundResult.totalScore.toLocaleString()} pts
             </div>
           </div>
@@ -333,29 +375,29 @@ export default function PlayerRoom() {
       {/* ======================================================== */}
       {phase === 'game_over' && (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div className="glass-panel" style={{ padding: '40px 32px', textAlign: 'center', maxWidth: '440px', width: '100%' }}>
-            <Trophy size={60} color="#f1c40f" style={{ margin: '0 auto 16px', filter: 'drop-shadow(0 0 15px rgba(241,196,15,0.6))' }} />
+          <div className="glass-panel" style={{ padding: '44px 36px', textAlign: 'center', maxWidth: '460px', width: '100%' }}>
+            <Trophy size={64} color="#f1c40f" style={{ margin: '0 auto 18px', filter: 'drop-shadow(0 0 20px rgba(241,196,15,0.6))' }} />
 
-            <h1 style={{ fontSize: '2rem', marginBottom: '6px', color: '#ffffff' }}>Quiz Finished! 🎓</h1>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '2.1rem', marginBottom: '6px', color: '#ffffff' }}>Quiz Finished! 🎓</h1>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '26px' }}>
               Great effort, {nickname}!
             </p>
 
             {finalStanding && (
-              <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '14px', padding: '20px', border: '1px solid var(--border-glass)', marginBottom: '28px' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '16px', padding: '22px', border: '1px solid var(--border-glass)', marginBottom: '30px' }}>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
                   Final Rank
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#f1c40f', margin: '4px 0' }}>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: '#f1c40f', margin: '4px 0' }}>
                   #{finalStanding.rank}
                 </div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
+                <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#ffffff' }}>
                   {finalStanding.score.toLocaleString()} Points
                 </div>
               </div>
             )}
 
-            <button className="btn btn-primary" onClick={() => navigate('/dashboard')} style={{ width: '100%', padding: '12px' }}>
+            <button className="btn btn-primary" onClick={() => navigate('/dashboard')} style={{ width: '100%', padding: '13px' }}>
               <ArrowLeft size={18} /> Back to Dashboard
             </button>
           </div>
