@@ -5,6 +5,15 @@ import { getSocket } from '../services/socket';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
 import { 
+  playLobbyMusic, 
+  stopLobbyMusic, 
+  playTick, 
+  playStart, 
+  playPodium, 
+  isMuted as getIsMuted, 
+  toggleMute as toggleSoundMute 
+} from '../services/sound';
+import { 
   Users, 
   Play, 
   Trophy, 
@@ -20,7 +29,11 @@ import {
   Copy,
   CheckCheck,
   Crown,
-  HelpCircle
+  HelpCircle,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 
 export default function HostRoom() {
@@ -41,6 +54,8 @@ export default function HostRoom() {
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [podiumData, setPodiumData] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(getIsMuted());
+  const [isConnected, setIsConnected] = useState(true);
   const [error, setError] = useState('');
 
   const socketRef = useRef(null);
@@ -51,10 +66,34 @@ export default function HostRoom() {
     pinRef.current = pin;
   }, [pin]);
 
-  // Initialize Host Room via Socket (runs once when mounting host room)
+  // Audio mute listener
+  useEffect(() => {
+    const handleMuteChange = (e) => {
+      setIsAudioMuted(e.detail.isMuted);
+    };
+    window.addEventListener('qizzy:mute_change', handleMuteChange);
+    return () => window.removeEventListener('qizzy:mute_change', handleMuteChange);
+  }, []);
+
+  const handleToggleSound = () => {
+    const newMute = toggleSoundMute();
+    setIsAudioMuted(newMute);
+    if (!newMute && phase === 'lobby') {
+      playLobbyMusic();
+    }
+  };
+
+  // Initialize Host Room via Socket
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
+
+    setIsConnected(socket.connected);
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = () => setIsConnected(false);
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
 
     socket.emit('host:create_room', { quizId, token }, (response) => {
       if (response?.error) {
@@ -64,6 +103,7 @@ export default function HostRoom() {
         pinRef.current = response.pin;
         setQuizTitle(response.title);
         setPhase('lobby');
+        playLobbyMusic();
       }
     });
 
@@ -79,20 +119,27 @@ export default function HostRoom() {
     });
 
     socket.on('game:starting', (data) => {
+      stopLobbyMusic();
       setPhase('countdown');
       setCountdown(data.count || 3);
+      playStart();
     });
 
     socket.on('game:question_start', (data) => {
+      stopLobbyMusic();
       setPhase('question');
       setCurrentQuestion(data);
       setTimeLeft(data.timeSeconds || 20);
       setAnsweredCount(0);
       setTotalPlayers(data.totalPlayers || 0);
+      playStart();
     });
 
     socket.on('game:timer_tick', (data) => {
       setTimeLeft(data.timeLeft);
+      if (data.timeLeft <= 5 && data.timeLeft > 0) {
+        playTick(data.timeLeft <= 2);
+      }
     });
 
     socket.on('host:answer_count_update', (data) => {
@@ -101,7 +148,6 @@ export default function HostRoom() {
     });
 
     socket.on('game:question_time_up', () => {
-      // Trigger answer reveal on host using current pin
       if (socketRef.current && pinRef.current) {
         socketRef.current.emit('host:reveal_answers', { pin: pinRef.current });
       }
@@ -121,9 +167,13 @@ export default function HostRoom() {
       setPhase('podium');
       setPodiumData(data);
       launchConfetti();
+      playPodium();
     });
 
     return () => {
+      stopLobbyMusic();
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
       socket.off('host:player_joined');
       socket.off('host:player_left');
       socket.off('game:starting');
@@ -149,7 +199,7 @@ export default function HostRoom() {
 
   // Confetti fireworks on podium
   const launchConfetti = () => {
-    const duration = 4 * 1000;
+    const duration = 5 * 1000;
     const animationEnd = Date.now() + duration;
 
     const frame = () => {
@@ -176,6 +226,7 @@ export default function HostRoom() {
   // Host Action: Start Game
   const handleStartGame = () => {
     if (!socketRef.current || !pin) return;
+    stopLobbyMusic();
     socketRef.current.emit('host:start_game', { pin }, (res) => {
       if (res?.error) setError(res.error);
     });
@@ -245,6 +296,36 @@ export default function HostRoom() {
 
   return (
     <div className="host-screen-container">
+      {/* Top Floating Control Bar (Sound & Connection) */}
+      <div style={styles.topControlBar}>
+        <div style={styles.statusIndicator}>
+          {isConnected ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#27ae60', fontSize: '0.82rem', fontWeight: 600 }}>
+              <Wifi size={14} /> Live Sync
+            </span>
+          ) : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#f39c12', fontSize: '0.82rem', fontWeight: 600 }}>
+              <WifiOff size={14} /> Reconnecting...
+            </span>
+          )}
+        </div>
+
+        <button 
+          onClick={handleToggleSound} 
+          style={styles.soundToggleBtn}
+          title={isAudioMuted ? 'Unmute Game Sounds' : 'Mute Game Sounds'}
+        >
+          {isAudioMuted ? (
+            <VolumeX size={18} color="#e74c3c" />
+          ) : (
+            <Volume2 size={18} color="#00cec9" />
+          )}
+          <span style={{ fontSize: '0.82rem', color: isAudioMuted ? '#e74c3c' : 'var(--text-main)', fontWeight: 600 }}>
+            {isAudioMuted ? 'Muted' : 'Sound On'}
+          </span>
+        </button>
+      </div>
+
       {/* ======================================================== */}
       {/* 1. LOBBY PHASE                                           */}
       {/* ======================================================== */}
@@ -411,15 +492,15 @@ export default function HostRoom() {
       {phase === 'reveal' && revealData && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <div className="glass-panel host-question-header">
-            <h2 style={{ fontSize: '1.3rem' }}>Answer Breakdown</h2>
-            <button className="btn btn-accent" onClick={handleShowLeaderboard}>
-              Next: Leaderboard <ArrowRight size={18} />
+            <h2 style={{ fontSize: '1.2rem' }}>Answer Breakdown</h2>
+            <button className="btn btn-accent" onClick={handleShowLeaderboard} style={{ padding: '8px 18px', fontSize: '0.9rem' }}>
+              Next: Leaderboard <ArrowRight size={16} />
             </button>
           </div>
 
           {/* Question Prompt Recap */}
-          <div className="host-question-box" style={{ padding: '20px', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1.4rem' }}>{revealData.questionText}</h3>
+          <div className="host-question-box" style={{ padding: '10px 16px', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '1.25rem', lineHeight: 1.3 }}>{revealData.questionText}</h3>
           </div>
 
           {/* Vertical Distribution Bar Chart */}
@@ -440,7 +521,7 @@ export default function HostRoom() {
                   </div>
                   <div style={{ color: isCorrect ? '#2ecc71' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 800 }}>
                     {renderShapeIcon(opt.color_shape)}
-                    {isCorrect && <Check size={18} strokeWidth={4} />}
+                    {isCorrect && <Check size={16} strokeWidth={4} />}
                   </div>
                 </div>
               );
@@ -461,8 +542,8 @@ export default function HostRoom() {
                   </div>
                   <div className="host-option-text" style={{ flex: 1 }}>{opt.option_text}</div>
                   {isCorrect && (
-                    <div style={{ background: '#ffffff', color: '#27ae60', borderRadius: '50%', padding: '6px', display: 'flex' }}>
-                      <Check size={24} strokeWidth={4} />
+                    <div style={{ background: '#ffffff', color: '#27ae60', borderRadius: '50%', padding: '4px', display: 'flex' }}>
+                      <Check size={20} strokeWidth={4} />
                     </div>
                   )}
                 </div>
@@ -594,3 +675,28 @@ export default function HostRoom() {
     </div>
   );
 }
+
+const styles = {
+  topControlBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '6px',
+    padding: '0 4px'
+  },
+  statusIndicator: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  soundToggleBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'rgba(255, 255, 255, 0.08)',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    padding: '6px 14px',
+    borderRadius: '20px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  }
+};

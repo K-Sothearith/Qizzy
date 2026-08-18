@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { pool, initDatabase } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 import initGameSocket from './sockets/gameSocket.js';
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

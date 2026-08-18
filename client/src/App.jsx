@@ -8,6 +8,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import QuizEditor from './pages/QuizEditor';
 import HostRoom from './pages/HostRoom';
 import PlayerRoom from './pages/PlayerRoom';
+import HostHistory from './pages/HostHistory';
 import './index.css';
 
 // Guard for authenticated users
@@ -87,7 +88,15 @@ export default function App() {
                 }
               />
 
-              {/* Admin Quiz Builder Routes */}
+              {/* Admin Quiz Builder & History Routes */}
+              <Route
+                path="/history"
+                element={
+                  <AdminRoute>
+                    <HostHistory />
+                  </AdminRoute>
+                }
+              />
               <Route
                 path="/quizzes/new"
                 element={

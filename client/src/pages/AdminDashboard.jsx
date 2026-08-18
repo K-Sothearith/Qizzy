@@ -15,6 +15,7 @@ import {
   Award, 
   HelpCircle,
   AlertTriangle,
+  History,
   X
 } from 'lucide-react';
 
@@ -93,8 +94,16 @@ export default function AdminDashboard() {
           <button 
             className="btn btn-primary" 
             onClick={() => navigate('/quizzes/new')}
+            style={{ width: '100%' }}
           >
             <PlusCircle size={18} /> Create Quiz
+          </button>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => navigate('/history')}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            <History size={17} color="var(--secondary)" /> View History
           </button>
         </div>
       </div>

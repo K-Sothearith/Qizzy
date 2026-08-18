@@ -1,10 +1,26 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Target, LogOut, User, ShieldCheck } from 'lucide-react';
+import { isMuted as getIsMuted, toggleMute as toggleSoundMute } from '../services/sound';
+import { Target, LogOut, User, ShieldCheck, Volume2, VolumeX } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const [isAudioMuted, setIsAudioMuted] = useState(getIsMuted());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleMuteChange = (e) => {
+      setIsAudioMuted(e.detail.isMuted);
+    };
+    window.addEventListener('qizzy:mute_change', handleMuteChange);
+    return () => window.removeEventListener('qizzy:mute_change', handleMuteChange);
+  }, []);
+
+  const handleToggleSound = () => {
+    const newMute = toggleSoundMute();
+    setIsAudioMuted(newMute);
+  };
 
   function handleLogout() {
     logout();
@@ -12,18 +28,32 @@ export default function Navbar() {
   }
 
   return (
-    <header style={styles.header}>
-      <div style={styles.container}>
-        <Link to="/" style={styles.logo}>
-          <Target size={26} color="#6c5ce7" />
-          <span style={styles.logoText}>Qizzy</span>
+    <header className="nav-header">
+      <div className="nav-container">
+        <Link to="/" className="nav-logo">
+          <Target size={26} color="#7c5cfc" />
+          <span className="nav-logo-text">Qizzy</span>
         </Link>
 
-        <div style={styles.navRight}>
+        <div className="nav-right">
+          {/* Global Sound Control */}
+          <button 
+            onClick={handleToggleSound} 
+            className="nav-sound-btn"
+            title={isAudioMuted ? 'Unmute Sound' : 'Mute Sound'}
+            aria-label="Toggle Sound"
+          >
+            {isAudioMuted ? (
+              <VolumeX size={17} color="#ff4757" />
+            ) : (
+              <Volume2 size={17} color="var(--secondary)" />
+            )}
+          </button>
+
           {isAuthenticated && (
-            <div style={styles.userInfo}>
-              <div style={styles.userBadgeGroup}>
-                <span style={styles.userName}>{user.name}</span>
+            <div className="nav-user-info">
+              <div className="nav-user-badge-group">
+                <span className="nav-user-name">{user?.name}</span>
                 {isAdmin ? (
                   <span className="badge badge-admin">
                     <ShieldCheck size={12} /> Admin
@@ -34,7 +64,7 @@ export default function Navbar() {
                   </span>
                 )}
               </div>
-              <button onClick={handleLogout} className="btn btn-secondary" style={styles.logoutBtn}>
+              <button onClick={handleLogout} className="btn btn-secondary nav-logout-btn">
                 <LogOut size={15} /> Logout
               </button>
             </div>
@@ -44,63 +74,3 @@ export default function Navbar() {
     </header>
   );
 }
-
-const styles = {
-  header: {
-    height: '65px',
-    background: 'rgba(11, 13, 25, 0.85)',
-    backdropFilter: 'blur(12px)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-    display: 'flex',
-    alignItems: 'center'
-  },
-  container: {
-    width: '100%',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 24px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  logoText: {
-    fontFamily: 'var(--font-heading)',
-    fontSize: '1.5rem',
-    fontWeight: '800',
-    background: 'linear-gradient(135deg, #ffffff 0%, #a29bfe 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent'
-  },
-  navRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px'
-  },
-  userInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px'
-  },
-  userBadgeGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  userName: {
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    color: '#ffffff'
-  },
-  logoutBtn: {
-    padding: '6px 14px',
-    fontSize: '0.85rem'
-  }
-};
