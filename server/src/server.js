@@ -44,10 +44,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Qizzy Server is running smoothly 🚀' });
 });
 
-// SPA Client Fallback for React Router
+// SPA Client Fallback for React Router (Express 5 compatible)
 if (fs.existsSync(clientDistPath)) {
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
       return next();
     }
     res.sendFile(path.join(clientDistPath, 'index.html'));
