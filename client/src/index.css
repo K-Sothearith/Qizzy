@@ -2342,3 +2342,9 @@ h1, h2, h3, h4 {
 .spin-icon {
   animation: spin 1s linear infinite;
 }
+
+@media (max-width: 480px) {
+  .hide-on-mobile-xs {
+    display: none !important;
+  }
+}

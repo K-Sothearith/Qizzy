@@ -6,7 +6,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'un
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('qizzy_token') || null);
+  const [token, setToken] = useState(() => {
+    // Clear legacy localStorage token to ensure login landing UX
+    localStorage.removeItem('qizzy_token');
+    return sessionStorage.getItem('qizzy_token') || null;
+  });
   const [loading, setLoading] = useState(true);
 
   // Load user profile on app start if token exists
@@ -56,7 +60,7 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || 'Login failed.');
     }
 
-    localStorage.setItem('qizzy_token', data.token);
+    sessionStorage.setItem('qizzy_token', data.token);
     setToken(data.token);
     setUser(data.user);
     return data.user;
@@ -76,7 +80,7 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || 'Registration failed.');
     }
 
-    localStorage.setItem('qizzy_token', data.token);
+    sessionStorage.setItem('qizzy_token', data.token);
     setToken(data.token);
     setUser(data.user);
     return data.user;
@@ -84,6 +88,7 @@ export function AuthProvider({ children }) {
 
   // Logout handler
   function logout() {
+    sessionStorage.removeItem('qizzy_token');
     localStorage.removeItem('qizzy_token');
     setToken(null);
     setUser(null);

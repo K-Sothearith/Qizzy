@@ -42,6 +42,7 @@ export default function PlayerRoom() {
   const [lockedQuote, setLockedQuote] = useState('');
   const [roundResult, setRoundResult] = useState(null);
   const [finalStanding, setFinalStanding] = useState(null);
+  const [midGameInfo, setMidGameInfo] = useState(null);
   const [error, setError] = useState('');
 
   const socketRef = useRef(null);
@@ -138,7 +139,30 @@ export default function PlayerRoom() {
       } else if (response?.success) {
         setRoomTitle(response.title);
         setNickname(response.nickname);
-        setPhase('lobby');
+
+        if (response.isMidGame) {
+          setMidGameInfo({
+            currentQuestionIndex: response.currentQuestionIndex,
+            totalQuestions: response.totalQuestions
+          });
+
+          if (response.gameStatus === 'question_active' && response.activeQuestion) {
+            setCurrentQuestion(response.activeQuestion);
+            setTimeLeft(response.activeQuestion.timeLeft);
+            setQuestionStartTime(Date.now() - ((response.activeQuestion.timeSeconds || 20) - response.activeQuestion.timeLeft) * 1000);
+            setPhase('question');
+            setLockedQuote('');
+            playStart();
+          } else if (response.gameStatus === 'countdown') {
+            setPhase('get_ready');
+            setCountdown(3);
+            playStart();
+          } else {
+            setPhase('mid_game_waiting');
+          }
+        } else {
+          setPhase('lobby');
+        }
       }
     });
   };
@@ -249,7 +273,7 @@ export default function PlayerRoom() {
       {phase === 'lobby' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
           <div className="glass-panel" style={{ padding: '40px 28px', maxWidth: '440px', width: '100%' }}>
-            <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: 'linear-gradient(135deg, #00d2d3 0%, #0984e3 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '2.1rem', fontWeight: 900, color: '#ffffff', boxShadow: '0 0 30px var(--secondary-glow)' }}>
+            <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: 'linear-gradient(135deg, #f7f1e3 0%, #d1ccc0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '2.1rem', fontWeight: 900, color: '#21201e', boxShadow: '0 0 30px var(--secondary-glow)' }}>
               {nickname.charAt(0).toUpperCase()}
             </div>
 
@@ -261,6 +285,34 @@ export default function PlayerRoom() {
             <div className="badge badge-student" style={{ padding: '8px 20px', fontSize: '0.88rem' }}>
               Room: {roomTitle}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 2B. MID-GAME WAITING PHASE (JOINED DURING QUESTION/REVEAL) */}
+      {/* ======================================================== */}
+      {phase === 'mid_game_waiting' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+          <div className="glass-panel" style={{ padding: '40px 28px', maxWidth: '460px', width: '100%' }}>
+            <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: 'linear-gradient(135deg, #f7f1e3 0%, #d1ccc0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '2.2rem', fontWeight: 900, color: '#21201e', boxShadow: '0 0 30px var(--secondary-glow)' }}>
+              ⚡
+            </div>
+
+            <h2 style={{ fontSize: '1.65rem', marginBottom: '8px', color: '#ffffff' }}>Joined Mid-Game! 🎯</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '20px', lineHeight: 1.5 }}>
+              Welcome, <strong>{nickname}</strong>! You've joined <strong>{roomTitle}</strong> while it's in progress.
+            </p>
+
+            {midGameInfo && (
+              <div className="badge badge-student" style={{ padding: '8px 18px', fontSize: '0.86rem', marginBottom: '16px' }}>
+                Question {(midGameInfo.currentQuestionIndex || 0) + 1} of {midGameInfo.totalQuestions || '?'} in progress
+              </div>
+            )}
+
+            <p style={{ fontSize: '0.88rem', color: 'var(--accent-light)', opacity: 0.95, background: 'rgba(255,255,255,0.06)', padding: '10px 16px', borderRadius: '10px', marginTop: '8px' }}>
+              Hang tight! You'll automatically join on the next question. ⏳
+            </p>
           </div>
         </div>
       )}

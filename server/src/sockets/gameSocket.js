@@ -174,9 +174,11 @@ export default function initGameSocket(io) {
           return callback?.({ error: 'Game room not found. Please check your PIN code.' });
         }
 
-        if (room.status !== 'lobby') {
-          return callback?.({ error: 'This quiz session has already started.' });
+        if (room.status === 'finished') {
+          return callback?.({ error: 'This quiz session has already finished.' });
         }
+
+        const isMidGame = room.status !== 'lobby';
 
         let userId = null;
         let playerName = (nickname || '').trim();
@@ -232,7 +234,7 @@ export default function initGameSocket(io) {
         socket.roomPin = pin;
         socket.isPlayer = true;
 
-        // Broadcast updated player list to Host
+        // Broadcast updated player list and count to Host
         const playerList = Array.from(room.players.values()).map(p => ({
           name: p.name,
           userId: p.userId,
@@ -242,14 +244,48 @@ export default function initGameSocket(io) {
         io.to(`host:${pin}`).emit('host:player_joined', {
           player: { name: playerObj.name, userId: playerObj.userId },
           players: playerList,
-          totalPlayers: playerList.length
+          totalPlayers: playerList.length,
+          isMidGame
         });
+
+        // If joined during active question, also update host live answering count
+        if (room.status === 'question_active') {
+          const answeredCount = Array.from(room.players.values()).filter(p => p.hasAnswered).length;
+          io.to(`host:${pin}`).emit('host:answer_count_update', {
+            answeredCount,
+            totalPlayers: room.players.size
+          });
+        }
+
+        let activeQuestion = null;
+        if (room.status === 'question_active' && room.questions[room.currentQuestionIndex]) {
+          const currentQ = room.questions[room.currentQuestionIndex];
+          activeQuestion = {
+            questionIndex: room.currentQuestionIndex,
+            totalQuestions: room.questions.length,
+            questionText: currentQ.question_text,
+            questionType: currentQ.question_type,
+            timeSeconds: currentQ.time_seconds || 20,
+            timeLeft: Math.max(0, room.timeLeft),
+            points: currentQ.points || 1000,
+            options: currentQ.options.map(opt => ({
+              id: opt.id,
+              option_text: opt.option_text,
+              color_shape: opt.color_shape
+            }))
+          };
+        }
 
         callback?.({
           success: true,
           pin,
           title: room.title,
-          nickname: playerObj.name
+          nickname: playerObj.name,
+          isMidGame,
+          gameStatus: room.status,
+          currentQuestionIndex: room.currentQuestionIndex,
+          totalQuestions: room.questions.length,
+          activeQuestion
         });
       } catch (error) {
         console.error('Error joining game:', error);

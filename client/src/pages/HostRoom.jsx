@@ -33,7 +33,9 @@ import {
   Volume2,
   VolumeX,
   Wifi,
-  WifiOff
+  WifiOff,
+  QrCode,
+  X
 } from 'lucide-react';
 
 export default function HostRoom() {
@@ -54,6 +56,7 @@ export default function HostRoom() {
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [podiumData, setPodiumData] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(getIsMuted());
   const [isConnected, setIsConnected] = useState(true);
   const [error, setError] = useState('');
@@ -296,34 +299,79 @@ export default function HostRoom() {
 
   return (
     <div className="host-screen-container">
-      {/* Top Floating Control Bar (Sound & Connection) */}
+      {/* Top Floating Control Bar (Sound, Connection, Mid-Game PIN & QR) */}
       <div style={styles.topControlBar}>
-        <div style={styles.statusIndicator}>
-          {isConnected ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#27ae60', fontSize: '0.82rem', fontWeight: 600 }}>
-              <Wifi size={14} /> Live Sync
-            </span>
-          ) : (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#f39c12', fontSize: '0.82rem', fontWeight: 600 }}>
-              <WifiOff size={14} /> Reconnecting...
+        <div style={styles.leftControls}>
+          <div style={styles.statusIndicator}>
+            {isConnected ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2ed573', fontSize: '0.82rem', fontWeight: 600 }}>
+                <Wifi size={14} /> Live Sync
+              </span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#ffa502', fontSize: '0.82rem', fontWeight: 600 }}>
+                <WifiOff size={14} /> Reconnecting...
+              </span>
+            )}
+          </div>
+
+          {phase !== 'lobby' && (
+            <span style={styles.topQuizTitle} title={quizTitle}>
+              {quizTitle}
             </span>
           )}
         </div>
 
-        <button 
-          onClick={handleToggleSound} 
-          style={styles.soundToggleBtn}
-          title={isAudioMuted ? 'Unmute Game Sounds' : 'Mute Game Sounds'}
-        >
-          {isAudioMuted ? (
-            <VolumeX size={18} color="#e74c3c" />
-          ) : (
-            <Volume2 size={18} color="#00cec9" />
+        {/* Persistent PIN & QR trigger when game is live */}
+        {phase !== 'lobby' && pin && (
+          <div style={styles.livePinBar}>
+            <div style={styles.livePinPill} title="Students can enter this PIN at /join to join mid-game">
+              <span style={styles.livePinLabel}>PIN:</span>
+              <strong style={styles.livePinCode}>{pin}</strong>
+              <button 
+                onClick={handleCopyLink} 
+                style={styles.livePinCopyBtn} 
+                title="Copy Game Join Link"
+                aria-label="Copy PIN Link"
+              >
+                {copiedLink ? <CheckCheck size={14} color="#2ed573" /> : <Copy size={14} />}
+              </button>
+            </div>
+
+            <button 
+              onClick={() => setShowQrModal(true)} 
+              className="btn btn-secondary"
+              style={styles.liveQrBtn}
+              title="Show QR Code for students to scan and join mid-game"
+            >
+              <QrCode size={15} color="var(--secondary)" />
+              <span className="hide-on-mobile-xs">QR Code</span>
+            </button>
+          </div>
+        )}
+
+        <div style={styles.rightControls}>
+          {phase !== 'lobby' && (
+            <div style={styles.livePlayersCount} title={`${players.length} students in room`}>
+              <Users size={15} color="var(--secondary)" />
+              <span>{players.length} Players</span>
+            </div>
           )}
-          <span style={{ fontSize: '0.82rem', color: isAudioMuted ? '#e74c3c' : 'var(--text-main)', fontWeight: 600 }}>
-            {isAudioMuted ? 'Muted' : 'Sound On'}
-          </span>
-        </button>
+
+          <button 
+            onClick={handleToggleSound} 
+            style={styles.soundToggleBtn}
+            title={isAudioMuted ? 'Unmute Game Sounds' : 'Mute Game Sounds'}
+          >
+            {isAudioMuted ? (
+              <VolumeX size={17} color="#ff4757" />
+            ) : (
+              <Volume2 size={17} color="var(--secondary)" />
+            )}
+            <span style={{ fontSize: '0.82rem', color: isAudioMuted ? '#ff4757' : 'var(--text-main)', fontWeight: 600 }}>
+              {isAudioMuted ? 'Muted' : 'Sound'}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* ======================================================== */}
@@ -672,6 +720,74 @@ export default function HostRoom() {
           </div>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* 7. LIVE MID-GAME QR CODE MODAL                           */}
+      {/* ======================================================== */}
+      {showQrModal && (
+        <div className="modal-overlay" onClick={() => setShowQrModal(false)}>
+          <div 
+            className="glass-panel modal-content" 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ maxWidth: '440px', textAlign: 'center', padding: '28px 24px' }}
+          >
+            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <QrCode size={22} color="var(--secondary)" />
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>Join Live Game</h3>
+              </div>
+              <button 
+                onClick={() => setShowQrModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                aria-label="Close QR Modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '18px' }}>
+              Scan with phone camera or visit <strong>{window.location.host}/join</strong>
+            </p>
+
+            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '16px', display: 'inline-block', margin: '0 auto 18px', boxShadow: '0 8px 30px rgba(0,0,0,0.5)' }}>
+              {joinUrl && (
+                <QRCodeSVG 
+                  value={joinUrl} 
+                  size={200}
+                  level="H"
+                  includeMargin={false}
+                />
+              )}
+            </div>
+
+            <div style={{ background: 'rgba(0, 0, 0, 0.35)', borderRadius: '12px', padding: '12px', marginBottom: '18px', border: '1px solid var(--border-glass)' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
+                Game PIN
+              </div>
+              <div style={{ fontSize: '2.2rem', fontWeight: 900, fontFamily: 'var(--font-heading)', color: 'var(--accent-light)', letterSpacing: '4px' }}>
+                {pin}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1, fontSize: '0.85rem' }} onClick={handleCopyLink}>
+                {copiedLink ? (
+                  <>
+                    <CheckCheck size={15} color="#2ed573" /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={15} /> Copy Join Link
+                  </>
+                )}
+              </button>
+              <button className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.85rem' }} onClick={() => setShowQrModal(false)}>
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -681,12 +797,95 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: '6px',
+    flexWrap: 'wrap',
+    gap: '10px',
+    marginBottom: '10px',
     padding: '0 4px'
+  },
+  leftControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    flexWrap: 'wrap'
   },
   statusIndicator: {
     display: 'flex',
     alignItems: 'center'
+  },
+  topQuizTitle: {
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    color: 'var(--text-muted)',
+    maxWidth: '260px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  },
+  livePinBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap'
+  },
+  livePinPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'rgba(25, 24, 22, 0.75)',
+    border: '1px solid var(--border-glass)',
+    padding: '4px 12px',
+    borderRadius: '10px'
+  },
+  livePinLabel: {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    color: 'var(--text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  livePinCode: {
+    fontFamily: 'var(--font-heading)',
+    fontSize: '1.25rem',
+    fontWeight: 900,
+    color: 'var(--accent-light)',
+    letterSpacing: '2px'
+  },
+  livePinCopyBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    padding: '2px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'color 0.2s ease'
+  },
+  liveQrBtn: {
+    padding: '6px 12px',
+    fontSize: '0.8rem',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    borderRadius: '10px'
+  },
+  rightControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    flexWrap: 'wrap'
+  },
+  livePlayersCount: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'rgba(209, 204, 192, 0.1)',
+    border: '1px solid var(--border-glass)',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '0.82rem',
+    fontWeight: 700,
+    color: 'var(--text-main)'
   },
   soundToggleBtn: {
     display: 'inline-flex',
