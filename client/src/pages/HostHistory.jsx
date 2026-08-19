@@ -64,9 +64,9 @@ export default function HostHistory() {
 
   const getRankBadge = (rank) => {
     if (rank === 1) return { label: '🥇 1st', color: '#ffd32a', bg: 'rgba(255, 211, 42, 0.15)', border: '1px solid rgba(255, 211, 42, 0.35)' };
-    if (rank === 2) return { label: '🥈 2nd', color: '#DDE6ED', bg: 'rgba(221, 230, 237, 0.15)', border: '1px solid rgba(221, 230, 237, 0.35)' };
+    if (rank === 2) return { label: '🥈 2nd', color: '#f7f1e3', bg: 'rgba(247, 241, 227, 0.15)', border: '1px solid rgba(209, 204, 192, 0.35)' };
     if (rank === 3) return { label: '🥉 3rd', color: '#fab1a0', bg: 'rgba(250, 177, 160, 0.15)', border: '1px solid rgba(250, 177, 160, 0.35)' };
-    return { label: `#${rank}`, color: 'var(--text-muted)', bg: 'rgba(157, 178, 191, 0.1)', border: '1px solid var(--border-glass)' };
+    return { label: `#${rank}`, color: 'var(--text-muted)', bg: 'rgba(132, 129, 122, 0.12)', border: '1px solid var(--border-glass)' };
   };
 
   return (
@@ -433,7 +433,7 @@ const styles = {
   coverPlaceholder: {
     width: '100%',
     height: '100%',
-    background: 'rgba(82, 109, 130, 0.25)',
+    background: 'rgba(132, 129, 122, 0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
@@ -498,7 +498,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 14px',
-    background: 'rgba(82, 109, 130, 0.14)',
+    background: 'rgba(132, 129, 122, 0.14)',
     borderRadius: '10px',
     border: '1px solid var(--border-glass)'
   },
@@ -550,7 +550,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(15, 23, 42, 0.78)',
+    background: 'rgba(25, 24, 22, 0.8)',
     backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',

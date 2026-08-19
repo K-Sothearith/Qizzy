@@ -181,7 +181,7 @@ export default function Register() {
 
           <div className={`admin-passcode-box ${role === 'admin' ? 'show' : ''}`}>
             <div className="form-group">
-              <label htmlFor="adminPasscode" style={{ color: '#a29bfe' }}>
+              <label htmlFor="adminPasscode" style={{ color: 'var(--secondary)' }}>
                 <Key size={12} style={{ display: 'inline', marginRight: '4px' }} /> Secret Admin Passcode
               </label>
               <div className="input-password-wrapper">
@@ -189,7 +189,7 @@ export default function Register() {
                   id="adminPasscode"
                   type={showAdminPasscode ? 'text' : 'password'}
                   className="form-input"
-                  style={{ borderColor: fieldErrors.adminPasscode ? 'var(--color-red)' : 'rgba(162, 155, 254, 0.5)' }}
+                  style={{ borderColor: fieldErrors.adminPasscode ? 'var(--color-red)' : 'rgba(209, 204, 192, 0.5)' }}
                   placeholder="Secret passcode"
                   value={adminPasscode}
                   onChange={(e) => {

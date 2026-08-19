@@ -89,10 +89,10 @@ export default function StudentDashboard() {
 
   // Compute Rank Tier Badge
   const getTierInfo = (score = 0) => {
-    if (score >= 10000) return { title: 'Grandmaster', color: '#DDE6ED', bg: 'rgba(221, 230, 237, 0.18)', icon: '💎' };
+    if (score >= 10000) return { title: 'Grandmaster', color: '#f7f1e3', bg: 'rgba(247, 241, 227, 0.18)', icon: '💎' };
     if (score >= 5000) return { title: 'Gold Quizzer', color: '#ffd32a', bg: 'rgba(255, 211, 42, 0.18)', icon: '🥇' };
-    if (score >= 2000) return { title: 'Silver Scholar', color: '#9DB2BF', bg: 'rgba(157, 178, 191, 0.18)', icon: '🥈' };
-    return { title: 'Rookie Scout', color: '#DDE6ED', bg: 'rgba(82, 109, 130, 0.3)', icon: '🥉' };
+    if (score >= 2000) return { title: 'Silver Scholar', color: '#d1ccc0', bg: 'rgba(209, 204, 192, 0.18)', icon: '🥈' };
+    return { title: 'Rookie Scout', color: '#aaa69d', bg: 'rgba(132, 129, 122, 0.3)', icon: '🥉' };
   };
 
   const stats = analytics?.stats || {
@@ -401,7 +401,7 @@ function getRankBadgeStyle(rank) {
   };
 
   if (rank === 1) return { ...base, background: 'rgba(255, 211, 42, 0.25)', color: '#ffd32a', border: '1px solid #ffd32a' };
-  if (rank === 2) return { ...base, background: 'rgba(223, 230, 233, 0.25)', color: '#dfe6e9', border: '1px solid #b2bec3' };
+  if (rank === 2) return { ...base, background: 'rgba(247, 241, 227, 0.25)', color: '#f7f1e3', border: '1px solid #d1ccc0' };
   if (rank === 3) return { ...base, background: 'rgba(250, 177, 160, 0.25)', color: '#fab1a0', border: '1px solid #e17055' };
   return { ...base, background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text-muted)' };
 }
@@ -496,7 +496,7 @@ const styles = {
     width: '70px',
     height: '70px',
     borderRadius: '50%',
-    background: 'rgba(0, 210, 211, 0.12)',
+    background: 'rgba(209, 204, 192, 0.12)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -517,7 +517,7 @@ const styles = {
   historyCoverPlaceholder: {
     width: '100%',
     height: '100%',
-    background: 'rgba(124, 92, 252, 0.15)',
+    background: 'rgba(132, 129, 122, 0.2)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'

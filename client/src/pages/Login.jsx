@@ -99,7 +99,7 @@ export default function Login() {
       <div className="glass-panel" style={styles.card}>
         <div style={styles.header}>
           <div style={styles.iconCircle}>
-            <Sparkles size={30} color="#6c5ce7" />
+            <Sparkles size={30} color="var(--secondary)" />
           </div>
           <h2 style={styles.title}>Welcome to Qizzy</h2>
           <p style={styles.subtitle}>Sign in to join live quizzes and view your scores</p>
@@ -207,8 +207,8 @@ const styles = {
     width: '60px',
     height: '60px',
     borderRadius: '50%',
-    background: 'rgba(108, 92, 231, 0.15)',
-    border: '1px solid rgba(108, 92, 231, 0.3)',
+    background: 'rgba(132, 129, 122, 0.2)',
+    border: '1px solid rgba(209, 204, 192, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

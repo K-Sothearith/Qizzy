@@ -31,7 +31,7 @@ export default function Navbar() {
     <header className="nav-header">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <Target size={26} color="#7c5cfc" />
+          <Target size={26} color="var(--secondary)" />
           <span className="nav-logo-text">Qizzy</span>
         </Link>
 
