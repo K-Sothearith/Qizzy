@@ -30,12 +30,14 @@ import {
   CheckCheck,
   Crown,
   HelpCircle,
-  Volume2,
-  VolumeX,
-  Wifi,
+  Volume2, 
+  VolumeX, 
+  Wifi, 
   WifiOff,
   QrCode,
-  X
+  X,
+  Shuffle,
+  Shield
 } from 'lucide-react';
 
 export default function HostRoom() {
@@ -46,6 +48,9 @@ export default function HostRoom() {
   const [pin, setPin] = useState(null);
   const [quizTitle, setQuizTitle] = useState('');
   const [phase, setPhase] = useState('initializing'); // 'lobby' | 'countdown' | 'question' | 'reveal' | 'leaderboard' | 'podium'
+  const [gameMode, setGameMode] = useState('individual'); // 'individual' | 'team'
+  const [teamCount, setTeamCount] = useState(2); // 2, 3, or 4
+  const [teams, setTeams] = useState([]);
   const [players, setPlayers] = useState([]);
   const [countdown, setCountdown] = useState(3);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -105,6 +110,9 @@ export default function HostRoom() {
         setPin(response.pin);
         pinRef.current = response.pin;
         setQuizTitle(response.title);
+        if (response.gameMode) setGameMode(response.gameMode);
+        if (response.teamCount) setTeamCount(response.teamCount);
+        if (response.teams) setTeams(response.teams);
         setPhase('lobby');
         playLobbyMusic();
       }
@@ -121,10 +129,24 @@ export default function HostRoom() {
       setTotalPlayers(data.totalPlayers || 0);
     });
 
+    socket.on('host:game_mode_changed', (data) => {
+      setGameMode(data.gameMode);
+      setTeamCount(data.teamCount);
+      setTeams(data.teams || []);
+      setPlayers(data.players || []);
+    });
+
+    socket.on('host:teams_shuffled', (data) => {
+      setTeams(data.teams || []);
+      setPlayers(data.players || []);
+    });
+
     socket.on('game:starting', (data) => {
       stopLobbyMusic();
       setPhase('countdown');
       setCountdown(data.count || 3);
+      if (data.gameMode) setGameMode(data.gameMode);
+      if (data.teams) setTeams(data.teams);
       playStart();
     });
 
@@ -226,6 +248,38 @@ export default function HostRoom() {
     frame();
   };
 
+  // Host Action: Change Game Mode (Individual vs Team)
+  const handleSetGameMode = (newMode, newCount = teamCount) => {
+    if (!socketRef.current || !pin) return;
+    socketRef.current.emit('host:set_game_mode', { pin, gameMode: newMode, teamCount: newCount }, (res) => {
+      if (res?.success) {
+        setGameMode(res.gameMode);
+        setTeamCount(res.teamCount);
+        setTeams(res.teams);
+        setPlayers(res.players || players);
+      }
+    });
+  };
+
+  // Host Action: Shuffle Teams
+  const handleShuffleTeams = () => {
+    if (!socketRef.current || !pin) return;
+    socketRef.current.emit('host:shuffle_teams', { pin }, (res) => {
+      if (res?.success) {
+        setPlayers(res.players || players);
+      }
+    });
+  };
+
+  // Host Action: Exit Lobby
+  const handleLeaveLobby = () => {
+    stopLobbyMusic();
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+    navigate('/dashboard');
+  };
+
   // Host Action: Start Game
   const handleStartGame = () => {
     if (!socketRef.current || !pin) return;
@@ -302,6 +356,17 @@ export default function HostRoom() {
       {/* Top Floating Control Bar (Sound, Connection, Mid-Game PIN & QR) */}
       <div style={styles.topControlBar}>
         <div style={styles.leftControls}>
+          {phase === 'lobby' && (
+            <button 
+              onClick={handleLeaveLobby}
+              className="btn btn-secondary"
+              style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+              title="Exit Lobby and return to Teacher Workspace"
+            >
+              <ArrowLeft size={15} /> Exit Lobby
+            </button>
+          )}
+
           <div style={styles.statusIndicator}>
             {isConnected ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2ed573', fontSize: '0.82rem', fontWeight: 600 }}>
@@ -442,31 +507,140 @@ export default function HostRoom() {
               </button>
             </div>
 
-            {/* Right: Joined Players Grid */}
+            {/* Right: Joined Players Grid or Team Rosters */}
             <div className="glass-panel players-lobby-panel">
-              <div className="players-lobby-header">
+              <div className="players-lobby-header" style={{ flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Users size={22} color="#00cec9" />
-                  <h2 style={{ fontSize: '1.3rem' }}>Players in Lobby ({players.length})</h2>
+                  <Users size={22} color="var(--secondary)" />
+                  <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Players in Lobby ({players.length})</h2>
                 </div>
-                {players.length === 0 && (
-                  <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-                    Waiting for players to join...
-                  </span>
-                )}
+
+                {/* Game Mode Selector in Lobby */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <div className="btn-group" style={{ display: 'inline-flex', background: 'rgba(0,0,0,0.35)', padding: '3px', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleSetGameMode('individual')}
+                      style={{
+                        padding: '5px 12px',
+                        fontSize: '0.8rem',
+                        borderRadius: '7px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: gameMode === 'individual' ? 'var(--secondary)' : 'transparent',
+                        color: gameMode === 'individual' ? '#21201e' : 'var(--text-muted)',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <Users size={13} /> Solo (Classic)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetGameMode('team')}
+                      style={{
+                        padding: '5px 12px',
+                        fontSize: '0.8rem',
+                        borderRadius: '7px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: gameMode === 'team' ? 'var(--secondary)' : 'transparent',
+                        color: gameMode === 'team' ? '#21201e' : 'var(--text-muted)',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <Shield size={13} /> Team Mode
+                    </button>
+                  </div>
+
+                  {gameMode === 'team' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {[2, 3, 4].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => handleSetGameMode('team', num)}
+                          style={{
+                            padding: '4px 9px',
+                            fontSize: '0.78rem',
+                            borderRadius: '6px',
+                            border: teamCount === num ? '1px solid var(--secondary)' : '1px solid var(--border-glass)',
+                            background: teamCount === num ? 'rgba(247, 241, 227, 0.2)' : 'rgba(255,255,255,0.05)',
+                            color: teamCount === num ? '#ffffff' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            fontWeight: 700
+                          }}
+                        >
+                          {num} Teams
+                        </button>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={handleShuffleTeams}
+                        className="btn btn-secondary"
+                        style={{ padding: '4px 10px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Shuffle players across teams"
+                      >
+                        <Shuffle size={12} /> Shuffle
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {players.length === 0 ? (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.6, gap: '12px' }}>
-                  <Users size={48} color="#6c5ce7" />
-                  <p style={{ color: 'var(--text-muted)' }}>Students will appear here as they enter the PIN.</p>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.6, gap: '12px', minHeight: '200px' }}>
+                  <Users size={48} color="var(--secondary)" />
+                  <p style={{ color: 'var(--text-muted)', margin: 0 }}>Students will appear here as they enter the PIN.</p>
+                </div>
+              ) : gameMode === 'team' ? (
+                /* Team Roster Grid */
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(180px, 1fr))`, gap: '12px', marginTop: '12px' }}>
+                  {teams.map((t) => {
+                    const teamMembers = players.filter(p => p.teamId === t.id);
+                    return (
+                      <div key={t.id} className="glass-panel" style={{ padding: '14px', borderTop: `3px solid ${t.color}`, background: 'rgba(0,0,0,0.25)', borderRadius: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '1.2rem' }}>{t.icon}</span>
+                            <strong style={{ fontSize: '0.92rem', color: t.color }}>{t.name}</strong>
+                          </div>
+                          <span className="badge" style={{ fontSize: '0.75rem', padding: '2px 8px', background: `${t.color}25`, color: t.color }}>
+                            {teamMembers.length}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                          {teamMembers.length === 0 ? (
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No members yet</span>
+                          ) : (
+                            teamMembers.map((m, mIdx) => (
+                              <div key={mIdx} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.06)', padding: '5px 10px', borderRadius: '8px' }}>
+                                <span style={{ fontSize: '1.15rem' }}>{m.avatar?.emoji || '🦊'}</span>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
+                /* Individual Solo Player Badges */
                 <div className="players-grid">
                   {players.map((p, idx) => (
                     <div key={idx} className="player-lobby-badge">
-                      <div className="player-avatar-circle">
-                        {p.name.charAt(0).toUpperCase()}
+                      <div className="player-avatar-circle" style={{ fontSize: '1.35rem' }}>
+                        {p.avatar?.emoji || p.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="player-name-text">{p.name}</span>
                     </div>
@@ -498,32 +672,37 @@ export default function HostRoom() {
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           {/* Header Bar */}
           <div className="glass-panel host-question-header">
-            <div>
-              <span className="badge badge-admin" style={{ fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div className="badge badge-admin">
                 Question {currentQuestion.questionIndex + 1} of {currentQuestion.totalQuestions}
-              </span>
+              </div>
+              {gameMode === 'team' && (
+                <div className="badge" style={{ background: 'rgba(247, 241, 227, 0.15)', color: 'var(--accent-light)', border: '1px solid var(--border-glass)' }}>
+                  <Shield size={12} /> Team Mode
+                </div>
+              )}
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                {answeredCount} of {totalPlayers} Answered
+              </div>
             </div>
 
-            {/* Synchronized Circular Countdown Timer */}
-            <div className={`host-timer-circle ${timeLeft <= 5 ? 'danger' : timeLeft <= 10 ? 'warning' : ''}`}>
+            <div className={`host-timer-circle ${timeLeft <= 5 ? 'timer-warning' : ''}`}>
               {timeLeft}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', color: '#ffffff', fontWeight: 700 }}>
-              <Users size={18} color="#00cec9" />
-              <span>{answeredCount} / {totalPlayers} Answered</span>
             </div>
           </div>
 
-          {/* Big Question Prompt Box */}
-          <div className="host-question-box">
+          {/* Question Text Box */}
+          <div className="glass-panel host-question-box">
             <h2 className="host-question-text">{currentQuestion.questionText}</h2>
           </div>
 
-          {/* 4 Colored Options Grid */}
+          {/* 4 Color Options Grid */}
           <div className="host-options-grid">
             {currentQuestion.options.map((opt) => (
-              <div key={opt.id} className={`host-option-card ${getColorClass(opt.color_shape)}`}>
+              <div 
+                key={opt.id} 
+                className={`host-option-card ${getColorClass(opt.color_shape)}`}
+              >
                 <div className="shape-badge">
                   {renderShapeIcon(opt.color_shape)}
                 </div>
@@ -535,28 +714,26 @@ export default function HostRoom() {
       )}
 
       {/* ======================================================== */}
-      {/* 4. ANSWER REVEAL & BAR CHART PHASE                       */}
+      {/* 4. ANSWER REVEAL PHASE (BAR CHART DISTRIBUTION)          */}
       {/* ======================================================== */}
       {phase === 'reveal' && revealData && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <div className="glass-panel host-question-header">
-            <h2 style={{ fontSize: '1.2rem' }}>Answer Breakdown</h2>
-            <button className="btn btn-accent" onClick={handleShowLeaderboard} style={{ padding: '8px 18px', fontSize: '0.9rem' }}>
-              Next: Leaderboard <ArrowRight size={16} />
+          {/* Top Control Action */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+              Answer Distribution ({revealData.totalAnswered} Total Responses)
+            </span>
+            <button className="btn btn-accent" onClick={handleShowLeaderboard}>
+              Show Leaderboard <ArrowRight size={18} />
             </button>
           </div>
 
-          {/* Question Prompt Recap */}
-          <div className="host-question-box" style={{ padding: '10px 16px', marginBottom: '10px' }}>
-            <h3 style={{ fontSize: '1.25rem', lineHeight: 1.3 }}>{revealData.questionText}</h3>
-          </div>
-
-          {/* Vertical Distribution Bar Chart */}
+          {/* Distribution Bar Chart Panel */}
           <div className="glass-panel answer-chart-container">
             {revealData.options.map((opt) => {
               const count = revealData.distribution[opt.id] || 0;
-              const total = Math.max(revealData.totalAnswered, 1);
-              const heightPercent = Math.max(Math.round((count / total) * 100), 12);
+              const maxCount = Math.max(...Object.values(revealData.distribution), 1);
+              const heightPercent = Math.max((count / maxCount) * 100, 15);
               const isCorrect = opt.id === revealData.correctOptionId;
 
               return (
@@ -606,10 +783,12 @@ export default function HostRoom() {
       {/* ======================================================== */}
       {phase === 'leaderboard' && leaderboardData && (
         <div className="leaderboard-container">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Trophy size={28} color="#f1c40f" />
-              <h2 style={{ fontSize: '1.8rem' }}>Top Scores</h2>
+              <h2 style={{ fontSize: '1.8rem', margin: 0 }}>
+                {leaderboardData.gameMode === 'team' ? 'Team Standings' : 'Top Scores'}
+              </h2>
             </div>
 
             {leaderboardData.isLastQuestion ? (
@@ -623,32 +802,90 @@ export default function HostRoom() {
             )}
           </div>
 
-          <div className="leaderboard-list">
-            {leaderboardData.leaderboard.map((player) => (
-              <div key={player.rank} className={`leaderboard-row rank-${player.rank}`}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div className="leaderboard-rank-badge">{player.rank}</div>
-                  <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{player.name}</span>
-                  {player.streak >= 2 && (
-                    <span className="badge" style={{ background: 'rgba(231, 76, 60, 0.2)', color: '#ff7675', border: '1px solid rgba(231, 76, 60, 0.4)' }}>
-                      <Flame size={14} color="#e74c3c" /> {player.streak} in a row!
-                    </span>
-                  )}
-                </div>
+          {leaderboardData.gameMode === 'team' && leaderboardData.teamsLeaderboard ? (
+            /* Team Standings View */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
+              {leaderboardData.teamsLeaderboard.map((team, idx) => {
+                const isLeader = idx === 0;
+                return (
+                  <div 
+                    key={team.id} 
+                    className="glass-panel" 
+                    style={{ 
+                      padding: '16px 20px', 
+                      borderLeft: `5px solid ${team.color}`, 
+                      background: isLeader ? 'rgba(247, 241, 227, 0.12)' : 'rgba(0,0,0,0.25)',
+                      borderRadius: '12px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#ffffff' }}>
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '1.3rem' }}>{team.icon}</span>
+                            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: team.color }}>{team.name}</span>
+                            <span className="badge" style={{ fontSize: '0.75rem', padding: '2px 8px', background: 'rgba(255,255,255,0.08)' }}>
+                              {team.memberCount} Players
+                            </span>
+                          </div>
+                          {team.mvp && (
+                            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span>Team MVP:</span>
+                              <strong style={{ color: 'var(--text-main)' }}>{team.mvp.name}</strong>
+                              <span>({team.mvp.score.toLocaleString()} pts)</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {player.lastPoints > 0 && (
-                    <span style={{ color: '#2ecc71', fontSize: '0.9rem', fontWeight: 700 }}>
-                      +{player.lastPoints}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 900, fontFamily: 'var(--font-heading)', color: 'var(--accent-light)' }}>
+                          {team.totalScore.toLocaleString()} pts
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                          Avg: {team.avgScore.toLocaleString()} pts/player
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Solo Individual Leaderboard */
+            <div className="leaderboard-list">
+              {leaderboardData.leaderboard.map((player) => (
+                <div key={player.rank} className={`leaderboard-row rank-${player.rank}`}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div className="leaderboard-rank-badge">{player.rank}</div>
+                    <div style={{ fontSize: '1.3rem', width: '32px', textAlign: 'center' }}>
+                      {player.avatar?.emoji || '🦊'}
+                    </div>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{player.name}</span>
+                    {player.streak >= 2 && (
+                      <span className="badge" style={{ background: 'rgba(231, 76, 60, 0.2)', color: '#ff7675', border: '1px solid rgba(231, 76, 60, 0.4)' }}>
+                        <Flame size={14} color="#e74c3c" /> {player.streak} streak!
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {player.lastPoints > 0 && (
+                      <span style={{ color: '#2ecc71', fontSize: '0.9rem', fontWeight: 700 }}>
+                        +{player.lastPoints}
+                      </span>
+                    )}
+                    <span style={{ fontSize: '1.35rem', fontWeight: 900, fontFamily: 'var(--font-heading)' }}>
+                      {player.score.toLocaleString()} pts
                     </span>
-                  )}
-                  <span style={{ fontSize: '1.35rem', fontWeight: 900, fontFamily: 'var(--font-heading)' }}>
-                    {player.score.toLocaleString()} pts
-                  </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -664,54 +901,120 @@ export default function HostRoom() {
             Congratulations to everyone who participated in <strong>{quizTitle}</strong>!
           </p>
 
-          {/* 3D Olympic Podium Steps */}
-          <div className="podium-container">
-            {/* 2nd Place */}
-            {podiumData.podium.second && (
-              <div className="podium-column">
-                <div className="podium-player-card">
-                  <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#ffffff' }}>
-                    {podiumData.podium.second.name}
+          {podiumData.gameMode === 'team' && podiumData.teamPodium ? (
+            /* Team Podium View */
+            <div className="podium-container">
+              {/* 2nd Place Team */}
+              {podiumData.teamPodium.second && (
+                <div className="podium-column">
+                  <div className="podium-player-card" style={{ borderTop: `3px solid ${podiumData.teamPodium.second.color}` }}>
+                    <div style={{ fontSize: '1.8rem', marginBottom: '4px' }}>{podiumData.teamPodium.second.icon}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.15rem', color: podiumData.teamPodium.second.color }}>
+                      {podiumData.teamPodium.second.name}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      {podiumData.teamPodium.second.totalScore.toLocaleString()} pts
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      {podiumData.teamPodium.second.members?.map(m => m.name).join(', ')}
+                    </div>
                   </div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    {podiumData.podium.second.score.toLocaleString()} pts
-                  </div>
+                  <div className="podium-step podium-second">2</div>
                 </div>
-                <div className="podium-step podium-second">2</div>
-              </div>
-            )}
+              )}
 
-            {/* 1st Place */}
-            {podiumData.podium.first && (
-              <div className="podium-column">
-                <Crown size={38} color="#f1c40f" style={{ marginBottom: '8px', filter: 'drop-shadow(0 0 10px rgba(241,196,15,0.7))' }} />
-                <div className="podium-player-card">
-                  <div style={{ fontWeight: 900, fontSize: '1.4rem', color: '#f1c40f' }}>
-                    {podiumData.podium.first.name}
+              {/* 1st Place Team */}
+              {podiumData.teamPodium.first && (
+                <div className="podium-column">
+                  <Crown size={38} color="#f1c40f" style={{ marginBottom: '8px', filter: 'drop-shadow(0 0 10px rgba(241,196,15,0.7))' }} />
+                  <div className="podium-player-card" style={{ borderTop: `3px solid ${podiumData.teamPodium.first.color}` }}>
+                    <div style={{ fontSize: '2.1rem', marginBottom: '4px' }}>{podiumData.teamPodium.first.icon}</div>
+                    <div style={{ fontWeight: 900, fontSize: '1.35rem', color: podiumData.teamPodium.first.color }}>
+                      {podiumData.teamPodium.first.name}
+                    </div>
+                    <div style={{ color: '#ffffff', fontSize: '1rem', fontWeight: 700 }}>
+                      {podiumData.teamPodium.first.totalScore.toLocaleString()} pts
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--accent-light)', marginTop: '4px', opacity: 0.9 }}>
+                      {podiumData.teamPodium.first.members?.map(m => m.name).join(', ')}
+                    </div>
                   </div>
-                  <div style={{ color: '#ffffff', fontSize: '1rem', fontWeight: 700 }}>
-                    {podiumData.podium.first.score.toLocaleString()} pts
-                  </div>
+                  <div className="podium-step podium-first">1</div>
                 </div>
-                <div className="podium-step podium-first">1</div>
-              </div>
-            )}
+              )}
 
-            {/* 3rd Place */}
-            {podiumData.podium.third && (
-              <div className="podium-column">
-                <div className="podium-player-card">
-                  <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#ffffff' }}>
-                    {podiumData.podium.third.name}
+              {/* 3rd Place Team */}
+              {podiumData.teamPodium.third && (
+                <div className="podium-column">
+                  <div className="podium-player-card" style={{ borderTop: `3px solid ${podiumData.teamPodium.third.color}` }}>
+                    <div style={{ fontSize: '1.8rem', marginBottom: '4px' }}>{podiumData.teamPodium.third.icon}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.15rem', color: podiumData.teamPodium.third.color }}>
+                      {podiumData.teamPodium.third.name}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      {podiumData.teamPodium.third.totalScore.toLocaleString()} pts
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      {podiumData.teamPodium.third.members?.map(m => m.name).join(', ')}
+                    </div>
                   </div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    {podiumData.podium.third.score.toLocaleString()} pts
-                  </div>
+                  <div className="podium-step podium-third">3</div>
                 </div>
-                <div className="podium-step podium-third">3</div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            /* Solo Individual Podium */
+            <div className="podium-container">
+              {/* 2nd Place */}
+              {podiumData.podium.second && (
+                <div className="podium-column">
+                  <div className="podium-player-card">
+                    <div style={{ fontSize: '1.8rem', marginBottom: '4px' }}>{podiumData.podium.second.avatar?.emoji || '🐼'}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#ffffff' }}>
+                      {podiumData.podium.second.name}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                      {podiumData.podium.second.score.toLocaleString()} pts
+                    </div>
+                  </div>
+                  <div className="podium-step podium-second">2</div>
+                </div>
+              )}
+
+              {/* 1st Place */}
+              {podiumData.podium.first && (
+                <div className="podium-column">
+                  <Crown size={38} color="#f1c40f" style={{ marginBottom: '8px', filter: 'drop-shadow(0 0 10px rgba(241,196,15,0.7))' }} />
+                  <div className="podium-player-card">
+                    <div style={{ fontSize: '2.1rem', marginBottom: '4px' }}>{podiumData.podium.first.avatar?.emoji || '🦊'}</div>
+                    <div style={{ fontWeight: 900, fontSize: '1.4rem', color: '#f1c40f' }}>
+                      {podiumData.podium.first.name}
+                    </div>
+                    <div style={{ color: '#ffffff', fontSize: '1rem', fontWeight: 700 }}>
+                      {podiumData.podium.first.score.toLocaleString()} pts
+                    </div>
+                  </div>
+                  <div className="podium-step podium-first">1</div>
+                </div>
+              )}
+
+              {/* 3rd Place */}
+              {podiumData.podium.third && (
+                <div className="podium-column">
+                  <div className="podium-player-card">
+                    <div style={{ fontSize: '1.8rem', marginBottom: '4px' }}>{podiumData.podium.third.avatar?.emoji || '🦁'}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#ffffff' }}>
+                      {podiumData.podium.third.name}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                      {podiumData.podium.third.score.toLocaleString()} pts
+                    </div>
+                  </div>
+                  <div className="podium-step podium-third">3</div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ marginTop: '40px' }}>
             <button className="btn btn-primary" onClick={() => navigate('/dashboard')} style={{ padding: '12px 32px' }}>

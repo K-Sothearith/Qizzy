@@ -57,6 +57,13 @@ function AdminRoute({ children }) {
   return children;
 }
 
+// Home router
+function HomeRedirect() {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return null;
+  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+}
+
 // Router to direct Admin vs Student to respective dashboards
 function DashboardRouter() {
   const { isAdmin } = useAuth();
@@ -72,7 +79,7 @@ export default function App() {
           <main style={{ flex: 1 }}>
             <Routes>
               {/* Home redirect */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<HomeRedirect />} />
 
               {/* Public Auth Routes */}
               <Route path="/login" element={<Login />} />

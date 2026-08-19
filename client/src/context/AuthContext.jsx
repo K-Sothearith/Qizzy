@@ -5,45 +5,62 @@ const AuthContext = createContext(null);
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.port !== '5173' ? '/api' : 'http://localhost:5000/api');
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => {
-    // Clear legacy localStorage token to ensure login landing UX
-    localStorage.removeItem('qizzy_token');
-    return sessionStorage.getItem('qizzy_token') || null;
+    try {
+      localStorage.removeItem('qizzy_token');
+      return sessionStorage.getItem('qizzy_token') || null;
+    } catch {
+      return null;
+    }
   });
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(() => Boolean(sessionStorage.getItem('qizzy_token')));
 
   // Load user profile on app start if token exists
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     async function loadUser() {
       if (!token) {
-        setLoading(false);
+        if (isMounted) setLoading(false);
         return;
       }
 
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
       try {
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          signal: controller.signal,
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
+        clearTimeout(timeoutId);
+
         if (response.ok) {
           const data = await response.json();
-          setUser(data.user);
+          if (isMounted) setUser(data.user);
         } else {
           // Token invalid or expired
-          logout();
+          if (isMounted) logout();
         }
       } catch (error) {
+        clearTimeout(timeoutId);
         console.error('Failed to load user session:', error);
-        logout();
+        if (isMounted) logout();
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
     loadUser();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [token]);
 
   // Login handler

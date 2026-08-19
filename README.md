@@ -404,7 +404,7 @@ This project is open-source and intended for educational and teaching purposes.
 
 ---
 
-### 🟠 Sprint 5: Host Quiz History, Team Mode & Avatar Customization (In Progress 🚀)
+### 🟢 Sprint 5: Host Quiz History, Team Mode & Avatar Customization (Completed ✅)
 * **Host History & Session Analytics**:
   * **Backend (`server/`)**:
     * `GET /api/analytics/host-history`: Tracks and prunes sessions to maintain the **5 most recent hosted quiz records** per teacher.
@@ -413,9 +413,16 @@ This project is open-source and intended for educational and teaching purposes.
   * **Frontend (`client/`)**:
     * **Teacher Workspace Banner**: Added `"View History"` action button alongside `"Create Quiz"` on `AdminDashboard.jsx`.
     * **Host History Page (`src/pages/HostHistory.jsx`)**: Displays cards for the 5 most recent hosted sessions, featuring an inline **Top 5 Leaderboard Preview** and a responsive **"See More"** modal with the full student roster and scores.
-* **Upcoming Features (Roadmap)**:
-  * **Cooperative Team Mode**: Automatic or host-managed player grouping into 2–4 competing teams with aggregate team leaderboard scores.
-  * **Customizable Student Avatars**: Interactive carousel of fun animal emojis and avatar badges selectable during lobby nickname entry.
+* **Customizable Student Avatars**:
+  * **Avatar Picker Modal (`src/components/AvatarPickerModal.jsx`)**: Interactive modal with 16 animal/character presets and 7 vibrant aura color gradients.
+  * **Zero Storage Overhead**: Transmitted as lightweight metadata and persisted in `localStorage` (`qizzy_player_avatar`).
+  * **Student Profile Integration**: Customizable directly from `StudentDashboard.jsx` and `PlayerRoom.jsx` join screen.
+  * **Live Game Integration**: Rendered across the host lobby grid, question leaderboards, feedback cards, and the 3D podium.
+* **Cooperative Team / Group Mode**:
+  * **Host Lobby Controls (`src/pages/HostRoom.jsx`)**: Live toggle between Solo Classic and Team Mode with 2, 3, or 4 teams (Crimson Dragons 🐉, Cobalt Titans ⚡, Golden Hawks 🦅, Emerald Wolves 🐺).
+  * **Dynamic Auto-Balancing & Shuffle**: Server dynamically balances students across teams on join with an on-demand **"Shuffle Teams"** action for the host.
+  * **Aggregate Team Scoring & Leaderboards**: Speed score points contribute to team totals and average scores. Leaderboards display real-time team standings and individual team MVPs.
+  * **Team 3D Podium**: Celebrates 1st, 2nd, and 3rd place Teams with team banners, crowns, and team member rosters.
 
 
 

@@ -53,6 +53,57 @@ function getWittyQuote(responseTimeMs, timeLimitSeconds) {
   }
 }
 
+// Preset teams for cooperative group mode
+const TEAM_PRESETS = [
+  { id: 'team_red', name: 'Crimson Dragons', icon: '🐉', color: '#ff4757', bg: 'linear-gradient(135deg, #ff4757 0%, #c0392b 100%)' },
+  { id: 'team_blue', name: 'Cobalt Titans', icon: '⚡', color: '#1e90ff', bg: 'linear-gradient(135deg, #1e90ff 0%, #0984e3 100%)' },
+  { id: 'team_yellow', name: 'Golden Hawks', icon: '🦅', color: '#ffa502', bg: 'linear-gradient(135deg, #ffa502 0%, #e67e22 100%)' },
+  { id: 'team_green', name: 'Emerald Wolves', icon: '🐺', color: '#2ed573', bg: 'linear-gradient(135deg, #2ed573 0%, #20bf6b 100%)' }
+];
+
+function getActiveTeams(teamCount = 2) {
+  const count = Math.max(2, Math.min(4, Number(teamCount) || 2));
+  return TEAM_PRESETS.slice(0, count);
+}
+
+function assignPlayerToTeam(room, socketId) {
+  if (room.gameMode !== 'team') return null;
+  const activeTeams = getActiveTeams(room.teamCount);
+  
+  const counts = {};
+  activeTeams.forEach(t => { counts[t.id] = 0; });
+  for (const [sId, p] of room.players.entries()) {
+    if (sId !== socketId && p.teamId && counts[p.teamId] !== undefined) {
+      counts[p.teamId]++;
+    }
+  }
+
+  let minTeam = activeTeams[0];
+  let minCount = Infinity;
+  for (const t of activeTeams) {
+    if (counts[t.id] < minCount) {
+      minCount = counts[t.id];
+      minTeam = t;
+    }
+  }
+  return minTeam;
+}
+
+function rebalanceAllTeams(room) {
+  if (room.gameMode !== 'team') return;
+  const activeTeams = getActiveTeams(room.teamCount);
+  const playerSockets = Array.from(room.players.keys());
+  
+  playerSockets.forEach((sId, index) => {
+    const team = activeTeams[index % activeTeams.length];
+    const player = room.players.get(sId);
+    if (player) {
+      player.teamId = team.id;
+      player.team = team;
+    }
+  });
+}
+
 /**
  * Socket.io Game Engine
  */
@@ -134,6 +185,9 @@ export default function initGameSocket(io) {
           hostId: decoded.id,
           title: quiz.title,
           status: 'lobby',
+          gameMode: 'individual', // 'individual' | 'team'
+          teamCount: 2, // 2, 3, or 4 teams
+          teams: getActiveTeams(2),
           questions: formattedQuestions,
           currentQuestionIndex: 0,
           questionStartTime: null,
@@ -156,7 +210,10 @@ export default function initGameSocket(io) {
           success: true,
           pin,
           title: quiz.title,
-          totalQuestions: formattedQuestions.length
+          totalQuestions: formattedQuestions.length,
+          gameMode: room.gameMode,
+          teamCount: room.teamCount,
+          teams: room.teams
         });
       } catch (error) {
         console.error('Error creating host room:', error);
@@ -167,7 +224,7 @@ export default function initGameSocket(io) {
     // ----------------------------------------------------
     // 2. PLAYER: Join Game
     // ----------------------------------------------------
-    socket.on('player:join_game', async ({ pin, token, nickname }, callback) => {
+    socket.on('player:join_game', async ({ pin, token, nickname, avatar }, callback) => {
       try {
         const room = rooms.get(pin);
         if (!room) {
@@ -205,10 +262,22 @@ export default function initGameSocket(io) {
           }
         }
 
+        const playerAvatar = typeof avatar === 'object' && avatar?.emoji 
+          ? avatar 
+          : { emoji: (typeof avatar === 'string' && avatar ? avatar : '🦊'), color: 'sand' };
+
+        let assignedTeam = null;
+        if (room.gameMode === 'team') {
+          assignedTeam = assignPlayerToTeam(room, socket.id);
+        }
+
         const playerObj = {
           socketId: socket.id,
           userId: userId || 0,
           name: playerName,
+          avatar: playerAvatar,
+          teamId: assignedTeam?.id || null,
+          team: assignedTeam || null,
           score: 0,
           streak: 0,
           lastPoints: 0,
@@ -238,11 +307,20 @@ export default function initGameSocket(io) {
         const playerList = Array.from(room.players.values()).map(p => ({
           name: p.name,
           userId: p.userId,
+          avatar: p.avatar,
+          teamId: p.teamId,
+          team: p.team,
           score: p.score
         }));
 
         io.to(`host:${pin}`).emit('host:player_joined', {
-          player: { name: playerObj.name, userId: playerObj.userId },
+          player: { 
+            name: playerObj.name, 
+            userId: playerObj.userId, 
+            avatar: playerObj.avatar,
+            teamId: playerObj.teamId,
+            team: playerObj.team
+          },
           players: playerList,
           totalPlayers: playerList.length,
           isMidGame
@@ -281,6 +359,11 @@ export default function initGameSocket(io) {
           pin,
           title: room.title,
           nickname: playerObj.name,
+          avatar: playerObj.avatar,
+          gameMode: room.gameMode,
+          teamId: playerObj.teamId,
+          team: playerObj.team,
+          teams: getActiveTeams(room.teamCount),
           isMidGame,
           gameStatus: room.status,
           currentQuestionIndex: room.currentQuestionIndex,
@@ -291,6 +374,109 @@ export default function initGameSocket(io) {
         console.error('Error joining game:', error);
         callback?.({ error: 'Failed to join game room.' });
       }
+    });
+
+    // ----------------------------------------------------
+    // 2B. HOST: Change Game Mode (Individual vs Team)
+    // ----------------------------------------------------
+    socket.on('host:set_game_mode', ({ pin, gameMode, teamCount }, callback) => {
+      const room = rooms.get(pin);
+      if (!room || room.hostSocketId !== socket.id) return;
+      if (room.status !== 'lobby') {
+        return callback?.({ error: 'Cannot change game mode after quiz has started.' });
+      }
+
+      room.gameMode = gameMode === 'team' ? 'team' : 'individual';
+      room.teamCount = Math.max(2, Math.min(4, Number(teamCount) || 2));
+      room.teams = getActiveTeams(room.teamCount);
+
+      if (room.gameMode === 'team') {
+        rebalanceAllTeams(room);
+      } else {
+        for (const p of room.players.values()) {
+          p.teamId = null;
+          p.team = null;
+        }
+      }
+
+      const playerList = Array.from(room.players.values()).map(p => ({
+        name: p.name,
+        userId: p.userId,
+        avatar: p.avatar,
+        teamId: p.teamId,
+        team: p.team,
+        score: p.score
+      }));
+
+      // Broadcast update to host
+      io.to(`host:${pin}`).emit('host:game_mode_changed', {
+        gameMode: room.gameMode,
+        teamCount: room.teamCount,
+        teams: room.teams,
+        players: playerList
+      });
+
+      // Notify all connected players of updated mode & team assignment
+      for (const [sId, p] of room.players.entries()) {
+        io.to(sId).emit('player:team_assigned', {
+          gameMode: room.gameMode,
+          team: p.team,
+          teams: room.teams
+        });
+      }
+
+      callback?.({
+        success: true,
+        gameMode: room.gameMode,
+        teamCount: room.teamCount,
+        teams: room.teams,
+        players: playerList
+      });
+    });
+
+    // ----------------------------------------------------
+    // 2C. HOST: Shuffle Teams
+    // ----------------------------------------------------
+    socket.on('host:shuffle_teams', ({ pin }, callback) => {
+      const room = rooms.get(pin);
+      if (!room || room.hostSocketId !== socket.id) return;
+      if (room.status !== 'lobby' || room.gameMode !== 'team') return;
+
+      const activeTeams = getActiveTeams(room.teamCount);
+      const playerSockets = Array.from(room.players.keys()).sort(() => Math.random() - 0.5);
+
+      playerSockets.forEach((sId, idx) => {
+        const team = activeTeams[idx % activeTeams.length];
+        const p = room.players.get(sId);
+        if (p) {
+          p.teamId = team.id;
+          p.team = team;
+        }
+      });
+
+      const playerList = Array.from(room.players.values()).map(p => ({
+        name: p.name,
+        userId: p.userId,
+        avatar: p.avatar,
+        teamId: p.teamId,
+        team: p.team,
+        score: p.score
+      }));
+
+      io.to(`host:${pin}`).emit('host:teams_shuffled', {
+        teams: activeTeams,
+        players: playerList
+      });
+
+      for (const [sId, p] of room.players.entries()) {
+        io.to(sId).emit('player:team_assigned', {
+          gameMode: room.gameMode,
+          team: p.team,
+          teams: activeTeams
+        });
+      }
+
+      callback?.({ success: true, players: playerList });
     });
 
     // ----------------------------------------------------
@@ -323,7 +509,9 @@ export default function initGameSocket(io) {
       io.to(`game:${pin}`).emit('game:starting', {
         count: 3,
         title: room.title,
-        totalQuestions: room.questions.length
+        totalQuestions: room.questions.length,
+        gameMode: room.gameMode,
+        teams: room.teams
       });
 
       callback?.({ success: true });
@@ -349,57 +537,52 @@ export default function initGameSocket(io) {
       }
 
       if (player.hasAnswered) {
-        return callback?.({ error: 'Answer already submitted for this question.' });
+        return callback?.({ error: 'You have already answered this question.' });
       }
 
       const currentQ = room.questions[room.currentQuestionIndex];
-      if (!currentQ) return;
+      if (!currentQ) {
+        return callback?.({ error: 'Question data missing.' });
+      }
 
-      player.hasAnswered = true;
+      const chosenOption = currentQ.options.find(opt => opt.id === optionId);
+      const isCorrect = Boolean(chosenOption?.is_correct);
 
-      // Determine correctness
-      const selectedOption = currentQ.options.find(o => o.id === optionId);
-      const isCorrect = selectedOption ? Boolean(selectedOption.is_correct) : false;
-
-      // Calculate speed points: Base * (1 - responseTime / (2 * timeLimit))
+      // Score Calculation Formula
       let pointsEarned = 0;
       if (isCorrect) {
         const timeLimitMs = (currentQ.time_seconds || 20) * 1000;
-        const clampedResponseTime = Math.min(Math.max(responseTimeMs || 0, 50), timeLimitMs);
-        const factor = 1 - (clampedResponseTime / (timeLimitMs * 2));
-        pointsEarned = Math.round((currentQ.points || 1000) * factor);
+        const validResponseTime = Math.min(Math.max(0, responseTimeMs || 0), timeLimitMs);
+        const timeFactor = 1 - (validResponseTime / (2 * timeLimitMs));
+        pointsEarned = Math.round((currentQ.points || 1000) * timeFactor);
+
         player.streak += 1;
+        player.score += pointsEarned;
+        player.lastPoints = pointsEarned;
+        player.lastIsCorrect = true;
       } else {
         player.streak = 0;
+        player.lastPoints = 0;
+        player.lastIsCorrect = false;
       }
 
-      player.lastPoints = pointsEarned;
-      player.lastIsCorrect = isCorrect;
-      player.score += pointsEarned;
+      player.hasAnswered = true;
 
-      // Store answer record
+      // Record answer in room memory
       if (!room.answers.has(room.currentQuestionIndex)) {
         room.answers.set(room.currentQuestionIndex, new Map());
       }
-      room.answers.get(room.currentQuestionIndex).set(socket.id, {
+      const answersMap = room.answers.get(room.currentQuestionIndex);
+      answersMap.set(socket.id, {
+        socketId: socket.id,
         userId: player.userId,
         questionId: currentQ.id,
         optionId,
         isCorrect,
-        responseTimeMs,
+        responseTimeMs: responseTimeMs || 0,
         pointsEarned
       });
 
-      // Get rule-based witty quote based on timing
-      const wittyQuote = getWittyQuote(responseTimeMs || 0, currentQ.time_seconds || 20);
-
-      callback?.({
-        success: true,
-        isLocked: true,
-        wittyQuote
-      });
-
-      // Broadcast answered count update to Host
       const answeredCount = Array.from(room.players.values()).filter(p => p.hasAnswered).length;
       const totalPlayers = room.players.size;
 
@@ -409,13 +592,24 @@ export default function initGameSocket(io) {
       });
 
       // Early finish if all players answered
-      if (answeredCount === totalPlayers) {
+      if (answeredCount === totalPlayers && totalPlayers > 0) {
         if (room.timerInterval) {
           clearInterval(room.timerInterval);
           room.timerInterval = null;
         }
         endQuestionTime(io, room);
       }
+
+      const wittyQuote = getWittyQuote(responseTimeMs || 0, currentQ.time_seconds || 20);
+
+      callback?.({
+        success: true,
+        isCorrect,
+        pointsEarned,
+        totalScore: player.score,
+        streak: player.streak,
+        wittyQuote
+      });
     });
 
     // ----------------------------------------------------
@@ -466,6 +660,7 @@ export default function initGameSocket(io) {
           totalScore: p.score,
           streak: p.streak,
           rank,
+          team: p.team,
           correctOptionText: correctOption?.option_text,
           correctColorShape: correctOption?.color_shape
         });
@@ -488,14 +683,40 @@ export default function initGameSocket(io) {
           name: p.name,
           score: p.score,
           streak: p.streak,
+          avatar: p.avatar,
+          team: p.team,
           lastPoints: p.lastPoints
         }));
 
       const top5 = sortedPlayers.slice(0, 5);
       const isLastQuestion = room.currentQuestionIndex >= room.questions.length - 1;
 
+      // If team mode, compute team standings
+      let teamsLeaderboard = null;
+      if (room.gameMode === 'team') {
+        const activeTeams = getActiveTeams(room.teamCount);
+        teamsLeaderboard = activeTeams.map(t => {
+          const members = Array.from(room.players.values()).filter(p => p.teamId === t.id);
+          const totalScore = members.reduce((sum, m) => sum + m.score, 0);
+          const avgScore = members.length > 0 ? Math.round(totalScore / members.length) : 0;
+          const sortedMembers = members.sort((a, b) => b.score - a.score);
+          const mvp = sortedMembers[0] || null;
+
+          return {
+            ...t,
+            totalScore,
+            avgScore,
+            memberCount: members.length,
+            members: sortedMembers.map(m => ({ name: m.name, score: m.score, avatar: m.avatar })),
+            mvp: mvp ? { name: mvp.name, score: mvp.score, avatar: mvp.avatar } : null
+          };
+        }).sort((a, b) => b.totalScore - a.totalScore);
+      }
+
       io.to(`game:${pin}`).emit('game:leaderboard_update', {
         leaderboard: top5,
+        gameMode: room.gameMode,
+        teamsLeaderboard,
         isLastQuestion,
         currentQuestionIndex: room.currentQuestionIndex,
         totalQuestions: room.questions.length
@@ -530,6 +751,8 @@ export default function initGameSocket(io) {
           rank: idx + 1,
           name: p.name,
           score: p.score,
+          avatar: p.avatar,
+          team: p.team,
           userId: p.userId
         }));
 
@@ -539,8 +762,37 @@ export default function initGameSocket(io) {
         third: sorted[2] || null
       };
 
+      // Compute Team Podium if Team Mode
+      let teamPodium = null;
+      if (room.gameMode === 'team') {
+        const activeTeams = getActiveTeams(room.teamCount);
+        const sortedTeams = activeTeams.map(t => {
+          const members = Array.from(room.players.values()).filter(p => p.teamId === t.id);
+          const totalScore = members.reduce((sum, m) => sum + m.score, 0);
+          const avgScore = members.length > 0 ? Math.round(totalScore / members.length) : 0;
+          const sortedMembers = members.sort((a, b) => b.score - a.score);
+          return {
+            ...t,
+            totalScore,
+            avgScore,
+            memberCount: members.length,
+            members: sortedMembers.map(m => ({ name: m.name, score: m.score, avatar: m.avatar })),
+            mvp: sortedMembers[0] ? { name: sortedMembers[0].name, score: sortedMembers[0].score, avatar: sortedMembers[0].avatar } : null
+          };
+        }).sort((a, b) => b.totalScore - a.totalScore);
+
+        teamPodium = {
+          first: sortedTeams[0] || null,
+          second: sortedTeams[1] || null,
+          third: sortedTeams[2] || null,
+          allTeams: sortedTeams
+        };
+      }
+
       io.to(`game:${pin}`).emit('game:final_results', {
+        gameMode: room.gameMode,
         podium,
+        teamPodium,
         standings: sorted
       });
 
@@ -627,6 +879,9 @@ export default function initGameSocket(io) {
         const playerList = Array.from(room.players.values()).map(p => ({
           name: p.name,
           userId: p.userId,
+          avatar: p.avatar,
+          teamId: p.teamId,
+          team: p.team,
           score: p.score
         }));
 

@@ -63,10 +63,10 @@ export default function HostHistory() {
   };
 
   const getRankBadge = (rank) => {
-    if (rank === 1) return { label: '🥇 1st', color: '#ffd32a', bg: 'rgba(255, 211, 42, 0.15)', border: '1px solid rgba(255, 211, 42, 0.35)' };
-    if (rank === 2) return { label: '🥈 2nd', color: '#f7f1e3', bg: 'rgba(247, 241, 227, 0.15)', border: '1px solid rgba(209, 204, 192, 0.35)' };
-    if (rank === 3) return { label: '🥉 3rd', color: '#fab1a0', bg: 'rgba(250, 177, 160, 0.15)', border: '1px solid rgba(250, 177, 160, 0.35)' };
-    return { label: `#${rank}`, color: 'var(--text-muted)', bg: 'rgba(132, 129, 122, 0.12)', border: '1px solid var(--border-glass)' };
+    if (rank === 1) return { label: '🥇 1st', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.18)', border: '1px solid rgba(251, 191, 36, 0.45)' };
+    if (rank === 2) return { label: '🥈 2nd', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.18)', border: '1px solid rgba(56, 189, 248, 0.45)' };
+    if (rank === 3) return { label: '🥉 3rd', color: '#fb923c', bg: 'rgba(251, 146, 60, 0.18)', border: '1px solid rgba(251, 146, 60, 0.45)' };
+    return { label: `#${rank}`, color: 'var(--text-muted)', bg: 'rgba(255, 255, 255, 0.06)', border: '1px solid var(--border-glass)' };
   };
 
   return (

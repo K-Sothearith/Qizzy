@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getSocket } from '../services/socket';
+import AvatarPickerModal, { getRandomAvatar, getAvatarColorStyle } from '../components/AvatarPickerModal';
 import { 
   playTap, 
   playTick, 
@@ -22,7 +23,9 @@ import {
   Triangle, 
   Diamond, 
   Circle, 
-  Square 
+  Square,
+  Shield,
+  Shuffle 
 } from 'lucide-react';
 
 export default function PlayerRoom() {
@@ -33,6 +36,17 @@ export default function PlayerRoom() {
 
   const [pin, setPin] = useState(initialPin);
   const [nickname, setNickname] = useState(user?.name || '');
+  const [avatar, setAvatar] = useState(() => {
+    const saved = localStorage.getItem('qizzy_player_avatar');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+    }
+    return { emoji: '🦊', color: 'sand' };
+  });
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [gameMode, setGameMode] = useState('individual');
+  const [assignedTeam, setAssignedTeam] = useState(null);
+
   const [phase, setPhase] = useState('join'); // 'join' | 'lobby' | 'get_ready' | 'question' | 'locked' | 'feedback' | 'game_over'
   const [roomTitle, setRoomTitle] = useState('');
   const [countdown, setCountdown] = useState(3);
@@ -54,7 +68,13 @@ export default function PlayerRoom() {
     socket.on('game:starting', (data) => {
       setPhase('get_ready');
       setCountdown(data.count || 3);
+      if (data.gameMode) setGameMode(data.gameMode);
       playStart();
+    });
+
+    socket.on('player:team_assigned', (data) => {
+      if (data.gameMode) setGameMode(data.gameMode);
+      setAssignedTeam(data.team || null);
     });
 
     socket.on('player:question_start', (data) => {
@@ -82,6 +102,7 @@ export default function PlayerRoom() {
 
     socket.on('player:round_result', (data) => {
       setRoundResult(data);
+      if (data.team) setAssignedTeam(data.team);
       setPhase('feedback');
       if (data.isCorrect) {
         playCorrect();
@@ -96,18 +117,20 @@ export default function PlayerRoom() {
 
     socket.on('game:final_results', (data) => {
       setPhase('game_over');
+      if (data.gameMode) setGameMode(data.gameMode);
       const myStanding = data.standings?.find(s => s.name === nickname || (user && s.userId === user.id));
       setFinalStanding(myStanding || null);
       playPodium();
     });
 
     socket.on('game:room_closed', () => {
-      setError('The host has ended this quiz session.');
-      setPhase('join');
+      alert('The host has ended this game session.');
+      navigate('/dashboard');
     });
 
     return () => {
       socket.off('game:starting');
+      socket.off('player:team_assigned');
       socket.off('player:question_start');
       socket.off('game:timer_tick');
       socket.off('game:question_time_up');
@@ -116,7 +139,7 @@ export default function PlayerRoom() {
       socket.off('game:final_results');
       socket.off('game:room_closed');
     };
-  }, [phase, nickname, user]);
+  }, [phase, nickname, user, navigate]);
 
   // Handle Joining Game
   const handleJoin = (e) => {
@@ -129,16 +152,23 @@ export default function PlayerRoom() {
     setError('');
     const socket = getSocket();
 
+    // Persist chosen avatar
+    localStorage.setItem('qizzy_player_avatar', JSON.stringify(avatar));
+
     socket.emit('player:join_game', {
       pin: pin.trim(),
       token,
-      nickname: nickname.trim()
+      nickname: nickname.trim(),
+      avatar
     }, (response) => {
       if (response?.error) {
         setError(response.error);
       } else if (response?.success) {
         setRoomTitle(response.title);
         setNickname(response.nickname);
+        if (response.avatar) setAvatar(response.avatar);
+        if (response.gameMode) setGameMode(response.gameMode);
+        if (response.team) setAssignedTeam(response.team);
 
         if (response.isMidGame) {
           setMidGameInfo({
@@ -209,6 +239,8 @@ export default function PlayerRoom() {
     }
   };
 
+  const activeColorObj = getAvatarColorStyle(avatar.color);
+
   return (
     <div className="player-controller-container">
       {/* ======================================================== */}
@@ -219,11 +251,56 @@ export default function PlayerRoom() {
           <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '32px 24px', textAlign: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
               <Gamepad2 size={32} color="var(--secondary)" />
-              <h1 style={{ fontSize: '1.85rem' }}>Join Qizzy</h1>
+              <h1 style={{ fontSize: '1.85rem', margin: 0 }}>Join Qizzy</h1>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '22px' }}>
-              Enter the Game PIN from the teacher's screen:
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
+              Pick your avatar and enter the Game PIN:
             </p>
+
+            {/* Interactive Avatar Preview */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '18px' }}>
+              <div 
+                onClick={() => setShowAvatarPicker(true)}
+                style={{ 
+                  width: '78px', 
+                  height: '78px', 
+                  borderRadius: '50%', 
+                  background: activeColorObj.gradient,
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: '2.3rem', 
+                  cursor: 'pointer',
+                  boxShadow: `0 0 20px ${activeColorObj.border}50`,
+                  border: `3px solid ${activeColorObj.border}`,
+                  marginBottom: '8px',
+                  transition: 'transform 0.15s ease'
+                }}
+                title="Click to change your avatar"
+              >
+                {avatar.emoji}
+              </div>
+
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAvatarPicker(true)}
+                  className="btn btn-secondary"
+                  style={{ padding: '3px 12px', fontSize: '0.78rem', borderRadius: '12px' }}
+                >
+                  ✏️ Change Avatar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAvatar(getRandomAvatar())}
+                  className="btn btn-secondary"
+                  style={{ padding: '3px 10px', fontSize: '0.78rem', borderRadius: '12px' }}
+                  title="Random Avatar"
+                >
+                  <Shuffle size={12} />
+                </button>
+              </div>
+            </div>
 
             {error && (
               <div className="error-banner" style={{ marginBottom: '18px' }}>
@@ -267,18 +344,66 @@ export default function PlayerRoom() {
         </div>
       )}
 
+      {/* Avatar Customization Modal */}
+      {showAvatarPicker && (
+        <AvatarPickerModal
+          currentAvatar={avatar}
+          onSave={(newAvatar) => {
+            setAvatar(newAvatar);
+            localStorage.setItem('qizzy_player_avatar', JSON.stringify(newAvatar));
+          }}
+          onClose={() => setShowAvatarPicker(false)}
+        />
+      )}
+
       {/* ======================================================== */}
       {/* 2. WAITING LOBBY PHASE                                   */}
       {/* ======================================================== */}
       {phase === 'lobby' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
           <div className="glass-panel" style={{ padding: '40px 28px', maxWidth: '440px', width: '100%' }}>
-            <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: 'linear-gradient(135deg, #f7f1e3 0%, #d1ccc0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '2.1rem', fontWeight: 900, color: '#21201e', boxShadow: '0 0 30px var(--secondary-glow)' }}>
-              {nickname.charAt(0).toUpperCase()}
+            <div 
+              style={{ 
+                width: '88px', 
+                height: '88px', 
+                borderRadius: '50%', 
+                background: activeColorObj.gradient, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                margin: '0 auto 16px', 
+                fontSize: '2.5rem', 
+                boxShadow: `0 0 28px ${activeColorObj.border}50`,
+                border: `3px solid ${activeColorObj.border}`
+              }}
+            >
+              {avatar.emoji}
             </div>
 
-            <h2 style={{ fontSize: '1.7rem', marginBottom: '8px', color: '#ffffff' }}>You're in, {nickname}! 🎉</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '1.7rem', marginBottom: '6px', color: '#ffffff' }}>You're in, {nickname}! 🎉</h2>
+            
+            {assignedTeam && (
+              <div 
+                style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  background: assignedTeam.bg || assignedTeam.color, 
+                  color: '#ffffff', 
+                  padding: '6px 18px', 
+                  borderRadius: '20px', 
+                  fontWeight: 800, 
+                  fontSize: '0.92rem', 
+                  margin: '12px 0 16px',
+                  boxShadow: `0 4px 15px ${assignedTeam.color}50`
+                }}
+              >
+                <span>{assignedTeam.icon}</span>
+                <span>{assignedTeam.name}</span>
+              </div>
+            )}
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '22px' }}>
               Look up at the teacher's screen. The quiz will start shortly!
             </p>
 
@@ -295,14 +420,48 @@ export default function PlayerRoom() {
       {phase === 'mid_game_waiting' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
           <div className="glass-panel" style={{ padding: '40px 28px', maxWidth: '460px', width: '100%' }}>
-            <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: 'linear-gradient(135deg, #f7f1e3 0%, #d1ccc0 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '2.2rem', fontWeight: 900, color: '#21201e', boxShadow: '0 0 30px var(--secondary-glow)' }}>
-              ⚡
+            <div 
+              style={{ 
+                width: '88px', 
+                height: '88px', 
+                borderRadius: '50%', 
+                background: activeColorObj.gradient, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                margin: '0 auto 16px', 
+                fontSize: '2.5rem', 
+                boxShadow: `0 0 28px ${activeColorObj.border}50`,
+                border: `3px solid ${activeColorObj.border}`
+              }}
+            >
+              {avatar.emoji}
             </div>
 
-            <h2 style={{ fontSize: '1.65rem', marginBottom: '8px', color: '#ffffff' }}>Joined Mid-Game! 🎯</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '20px', lineHeight: 1.5 }}>
+            <h2 style={{ fontSize: '1.65rem', marginBottom: '6px', color: '#ffffff' }}>Joined Mid-Game! 🎯</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '16px', lineHeight: 1.5 }}>
               Welcome, <strong>{nickname}</strong>! You've joined <strong>{roomTitle}</strong> while it's in progress.
             </p>
+
+            {assignedTeam && (
+              <div 
+                style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  background: assignedTeam.bg || assignedTeam.color, 
+                  color: '#ffffff', 
+                  padding: '6px 18px', 
+                  borderRadius: '20px', 
+                  fontWeight: 800, 
+                  fontSize: '0.9rem', 
+                  marginBottom: '16px' 
+                }}
+              >
+                <span>{assignedTeam.icon}</span>
+                <span>{assignedTeam.name}</span>
+              </div>
+            )}
 
             {midGameInfo && (
               <div className="badge badge-student" style={{ padding: '8px 18px', fontSize: '0.86rem', marginBottom: '16px' }}>
@@ -326,6 +485,11 @@ export default function PlayerRoom() {
             Get Ready!
           </h2>
           <div className="countdown-pulse-number">{countdown}</div>
+          {assignedTeam && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '1.2rem', color: assignedTeam.color, fontWeight: 800, marginTop: '12px' }}>
+              <span>{assignedTeam.icon}</span> {assignedTeam.name}
+            </div>
+          )}
         </div>
       )}
 
@@ -334,12 +498,17 @@ export default function PlayerRoom() {
       {/* ======================================================== */}
       {phase === 'question' && currentQuestion && (
         <div className="player-question-container">
-          {/* Top Bar: Question Index & Circular Glow Timer */}
+          {/* Top Bar: Question Index, Team Pill & Circular Glow Timer */}
           <div className="glass-panel player-top-status-bar">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span className="badge badge-student" style={{ fontSize: '0.82rem' }}>
                 Q {currentQuestion.questionIndex + 1} / {currentQuestion.totalQuestions}
               </span>
+              {assignedTeam && (
+                <span className="badge" style={{ background: `${assignedTeam.color}35`, color: assignedTeam.color, border: `1px solid ${assignedTeam.color}60`, fontWeight: 800 }}>
+                  {assignedTeam.icon} {assignedTeam.name}
+                </span>
+              )}
               <span className="badge" style={{ background: 'rgba(255, 211, 42, 0.15)', color: '#ffd32a', border: '1px solid rgba(255, 211, 42, 0.3)' }}>
                 🏆 {currentQuestion.points || 1000} pts
               </span>
@@ -395,6 +564,12 @@ export default function PlayerRoom() {
           <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
             Answer locked in! Waiting for all players to finish... ⏳
           </p>
+
+          {assignedTeam && (
+            <div style={{ marginTop: '12px', fontSize: '0.88rem', color: assignedTeam.color, fontWeight: 700 }}>
+              <span>{assignedTeam.icon} For {assignedTeam.name}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -427,6 +602,12 @@ export default function PlayerRoom() {
             </div>
           )}
 
+          {assignedTeam && (
+            <div style={{ fontSize: '0.92rem', color: assignedTeam.color, fontWeight: 700, margin: '8px 0' }}>
+              {assignedTeam.icon} Contributed to {assignedTeam.name}
+            </div>
+          )}
+
           <div style={{ marginTop: '14px', padding: '14px 26px', background: 'rgba(0, 0, 0, 0.5)', borderRadius: '14px', border: '1px solid var(--border-glass)' }}>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Current Standing: </span>
             <strong style={{ fontSize: '1.15rem', color: 'var(--secondary)' }}>#{roundResult.rank} Place</strong>
@@ -449,6 +630,12 @@ export default function PlayerRoom() {
             <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
               Great effort, {nickname}!
             </p>
+
+            {assignedTeam && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: assignedTeam.color, color: '#ffffff', padding: '6px 18px', borderRadius: '20px', fontWeight: 800, marginBottom: '20px' }}>
+                <span>{assignedTeam.icon}</span> {assignedTeam.name}
+              </div>
+            )}
 
             {finalStanding && (
               <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '16px', padding: '20px', border: '1px solid var(--border-glass)', marginBottom: '26px' }}>

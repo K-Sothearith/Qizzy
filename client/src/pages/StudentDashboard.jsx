@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchStudentAnalytics, fetchSessionDetails } from '../services/analyticsService';
+import AvatarPickerModal, { getAvatarColorStyle } from '../components/AvatarPickerModal';
 import { 
   Trophy, 
   Target, 
@@ -31,6 +32,16 @@ export default function StudentDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   
+  // Avatar state
+  const [avatar, setAvatar] = useState(() => {
+    const saved = localStorage.getItem('qizzy_player_avatar');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+    }
+    return { emoji: '🦊', color: 'sand' };
+  });
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+
   // Session details modal state
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionDetails, setSessionDetails] = useState(null);
@@ -89,10 +100,10 @@ export default function StudentDashboard() {
 
   // Compute Rank Tier Badge
   const getTierInfo = (score = 0) => {
-    if (score >= 10000) return { title: 'Grandmaster', color: '#f7f1e3', bg: 'rgba(247, 241, 227, 0.18)', icon: '💎' };
-    if (score >= 5000) return { title: 'Gold Quizzer', color: '#ffd32a', bg: 'rgba(255, 211, 42, 0.18)', icon: '🥇' };
-    if (score >= 2000) return { title: 'Silver Scholar', color: '#d1ccc0', bg: 'rgba(209, 204, 192, 0.18)', icon: '🥈' };
-    return { title: 'Rookie Scout', color: '#aaa69d', bg: 'rgba(132, 129, 122, 0.3)', icon: '🥉' };
+    if (score >= 10000) return { title: 'Grandmaster', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.2)', icon: '💎' };
+    if (score >= 5000) return { title: 'Gold Quizzer', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.2)', icon: '🥇' };
+    if (score >= 2000) return { title: 'Silver Scholar', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.2)', icon: '🥈' };
+    return { title: 'Rookie Scout', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.18)', icon: '🥉' };
   };
 
   const stats = analytics?.stats || {
@@ -109,20 +120,48 @@ export default function StudentDashboard() {
 
   const tier = getTierInfo(stats.totalScore);
   const history = analytics?.history || [];
+  const activeColorObj = getAvatarColorStyle(avatar.color);
 
   return (
     <div className="student-dashboard-container">
       {/* 1. Hero Welcome & Quick PIN Join */}
       <div className="glass-panel student-hero-banner">
-        <div className="student-hero-left">
-          <div style={styles.tierPill}>
-            <span>{tier.icon}</span>
-            <span style={{ color: tier.color, fontWeight: 700, fontSize: '0.85rem' }}>{tier.title}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
+          <div 
+            onClick={() => setShowAvatarPicker(true)}
+            style={{ 
+              width: '74px', 
+              height: '74px', 
+              borderRadius: '50%', 
+              background: activeColorObj.gradient,
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              fontSize: '2.3rem', 
+              cursor: 'pointer',
+              boxShadow: `0 0 20px ${activeColorObj.border}40`,
+              border: `3px solid ${activeColorObj.border}`,
+              position: 'relative',
+              flexShrink: 0
+            }}
+            title="Click to customize your student avatar"
+          >
+            {avatar.emoji}
+            <span style={{ position: 'absolute', bottom: '-4px', right: '-4px', background: 'var(--secondary)', color: '#21201e', fontSize: '0.62rem', fontWeight: 800, padding: '2px 5px', borderRadius: '6px' }}>
+              EDIT
+            </span>
           </div>
-          <h1 className="student-hero-title">Welcome back, {user?.name}! 👋</h1>
-          <p className="student-hero-subtitle">
-            Global Student Rank: <strong style={{ color: 'var(--secondary)' }}>#{stats.globalRank}</strong> (out of {stats.totalStudents})
-          </p>
+
+          <div className="student-hero-left">
+            <div style={styles.tierPill}>
+              <span>{tier.icon}</span>
+              <span style={{ color: tier.color, fontWeight: 700, fontSize: '0.85rem' }}>{tier.title}</span>
+            </div>
+            <h1 className="student-hero-title">Welcome back, {user?.name}! 👋</h1>
+            <p className="student-hero-subtitle">
+              Global Student Rank: <strong style={{ color: 'var(--secondary)' }}>#{stats.globalRank}</strong> (out of {stats.totalStudents})
+            </p>
+          </div>
         </div>
 
         <div className="student-hero-right">
@@ -386,6 +425,18 @@ export default function StudentDashboard() {
           </div>
         </div>
       )}
+
+      {/* Avatar Customization Modal */}
+      {showAvatarPicker && (
+        <AvatarPickerModal
+          currentAvatar={avatar}
+          onSave={(newAvatar) => {
+            setAvatar(newAvatar);
+            localStorage.setItem('qizzy_player_avatar', JSON.stringify(newAvatar));
+          }}
+          onClose={() => setShowAvatarPicker(false)}
+        />
+      )}
     </div>
   );
 }
@@ -400,9 +451,9 @@ function getRankBadgeStyle(rank) {
     display: 'inline-block'
   };
 
-  if (rank === 1) return { ...base, background: 'rgba(255, 211, 42, 0.25)', color: '#ffd32a', border: '1px solid #ffd32a' };
-  if (rank === 2) return { ...base, background: 'rgba(247, 241, 227, 0.25)', color: '#f7f1e3', border: '1px solid #d1ccc0' };
-  if (rank === 3) return { ...base, background: 'rgba(250, 177, 160, 0.25)', color: '#fab1a0', border: '1px solid #e17055' };
+  if (rank === 1) return { ...base, background: 'rgba(251, 191, 36, 0.25)', color: '#fbbf24', border: '1px solid #fbbf24' };
+  if (rank === 2) return { ...base, background: 'rgba(56, 189, 248, 0.25)', color: '#38bdf8', border: '1px solid #38bdf8' };
+  if (rank === 3) return { ...base, background: 'rgba(251, 146, 60, 0.25)', color: '#fb923c', border: '1px solid #ea580c' };
   return { ...base, background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text-muted)' };
 }
 
