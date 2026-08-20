@@ -43,7 +43,7 @@ export function getAvatarColorStyle(colorId) {
 
 export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
   const [selectedEmoji, setSelectedEmoji] = useState(currentAvatar?.emoji || '🦊');
-  const [selectedColor, setSelectedColor] = useState(currentAvatar?.color || 'sand');
+  const [selectedColor, setSelectedColor] = useState(currentAvatar?.color || 'caramel');
 
   const activeColorObj = COLOR_PRESETS.find(c => c.id === selectedColor) || COLOR_PRESETS[0];
 
@@ -59,20 +59,33 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000, padding: '12px' }}>
       <div 
         className="glass-panel modal-content" 
         onClick={(e) => e.stopPropagation()} 
-        style={{ maxWidth: '480px', padding: '24px' }}
+        style={{ 
+          width: '100%', 
+          maxWidth: '440px', 
+          maxHeight: '90vh', 
+          maxHeight: '90dvh',
+          overflowY: 'auto',
+          padding: '20px 16px',
+          borderRadius: '18px',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
       >
-        <div className="modal-header" style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px', marginBottom: '18px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)', paddingBottom: '12px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={20} color="var(--secondary)" />
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)', margin: 0 }}>Choose Your Avatar</h3>
+            <h3 style={{ fontSize: '1.2rem', color: 'var(--text-main)', margin: 0, fontWeight: 800 }}>
+              Customize Avatar
+            </h3>
           </div>
           <button 
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
             aria-label="Close Avatar Picker"
           >
             <X size={20} />
@@ -80,20 +93,20 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
         </div>
 
         {/* Live Preview Area */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '18px' }}>
           <div 
             style={{ 
-              width: '88px', 
-              height: '88px', 
+              width: '84px', 
+              height: '84px', 
               borderRadius: '50%', 
               background: activeColorObj.gradient,
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
               fontSize: '2.4rem', 
-              boxShadow: `0 0 24px ${activeColorObj.border}40`,
+              boxShadow: `0 0 24px ${activeColorObj.border}50`,
               border: `3px solid ${activeColorObj.border}`,
-              marginBottom: '10px',
+              marginBottom: '8px',
               transition: 'all 0.2s ease'
             }}
           >
@@ -103,7 +116,7 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
             type="button"
             onClick={handleRandomize} 
             className="btn btn-secondary" 
-            style={{ padding: '4px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+            style={{ padding: '4px 14px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '16px' }}
           >
             <Shuffle size={13} /> Randomize
           </button>
@@ -111,10 +124,17 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
 
         {/* Emojis Grid */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
-            Select Character
+          <label style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: '8px' }}>
+            Select Character ({AVATAR_PRESETS.length})
           </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(44px, 1fr))', 
+            gap: '8px',
+            maxHeight: '160px',
+            overflowY: 'auto',
+            padding: '2px 2px 6px'
+          }}>
             {AVATAR_PRESETS.map((item) => {
               const isSelected = selectedEmoji === item.emoji;
               return (
@@ -123,17 +143,19 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
                   type="button"
                   onClick={() => setSelectedEmoji(item.emoji)}
                   style={{
-                    background: isSelected ? 'rgba(247, 241, 227, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                    height: '46px',
+                    background: isSelected ? 'rgba(255, 251, 233, 0.22)' : 'rgba(255, 255, 255, 0.05)',
                     border: isSelected ? '2px solid var(--secondary)' : '1px solid var(--border-glass)',
-                    borderRadius: '10px',
-                    fontSize: '1.5rem',
-                    padding: '8px 4px',
+                    borderRadius: '12px',
+                    fontSize: '1.45rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                    transition: 'all 0.15s ease'
+                    transform: isSelected ? 'scale(1.08)' : 'scale(1)',
+                    boxShadow: isSelected ? '0 0 10px rgba(227, 202, 165, 0.4)' : 'none',
+                    transition: 'all 0.15s ease',
+                    padding: 0
                   }}
                   title={item.label}
                 >
@@ -145,11 +167,11 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
         </div>
 
         {/* Color Presets */}
-        <div style={{ marginBottom: '22px' }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>
-            Select Aura Color
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: '8px' }}>
+            Select Aura Glow
           </label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {COLOR_PRESETS.map((color) => {
               const isSelected = selectedColor === color.id;
               return (
@@ -158,8 +180,8 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
                   type="button"
                   onClick={() => setSelectedColor(color.id)}
                   style={{
-                    width: '34px',
-                    height: '34px',
+                    width: '36px',
+                    height: '36px',
                     borderRadius: '50%',
                     background: color.gradient,
                     border: isSelected ? '3px solid #ffffff' : '2px solid transparent',
@@ -167,13 +189,14 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: isSelected ? '0 0 12px rgba(255,255,255,0.6)' : 'none',
+                    boxShadow: isSelected ? '0 0 14px rgba(255,255,255,0.7)' : 'none',
                     transform: isSelected ? 'scale(1.15)' : 'scale(1)',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
+                    padding: 0
                   }}
                   title={color.label}
                 >
-                  {isSelected && <Check size={16} color="#ffffff" strokeWidth={3} />}
+                  {isSelected && <Check size={16} color="#ffffff" strokeWidth={3.5} />}
                 </button>
               );
             })}
@@ -181,11 +204,11 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
           <button 
             type="button"
             className="btn btn-secondary" 
-            style={{ flex: 1 }} 
+            style={{ flex: 1, padding: '10px' }} 
             onClick={onClose}
           >
             Cancel
@@ -193,7 +216,7 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
           <button 
             type="button"
             className="btn btn-primary" 
-            style={{ flex: 1.5 }} 
+            style={{ flex: 1.5, padding: '10px' }} 
             onClick={handleConfirm}
           >
             Apply Avatar

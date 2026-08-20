@@ -19,7 +19,8 @@ import {
   X, 
   Flame, 
   Trophy, 
-  ArrowLeft, 
+  ArrowLeft,
+  ArrowRight,
   Triangle, 
   Diamond, 
   Circle, 
@@ -35,13 +36,15 @@ export default function PlayerRoom() {
   const navigate = useNavigate();
 
   const [pin, setPin] = useState(initialPin);
+  const [tempPin, setTempPin] = useState(initialPin || '');
+  const [joinStep, setJoinStep] = useState(initialPin.trim() ? 'profile' : 'pin');
   const [nickname, setNickname] = useState(user?.name || '');
   const [avatar, setAvatar] = useState(() => {
     const saved = localStorage.getItem('qizzy_player_avatar');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return { emoji: '🦊', color: 'sand' };
+    return { emoji: '🦊', color: 'caramel' };
   });
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [gameMode, setGameMode] = useState('individual');
@@ -60,6 +63,15 @@ export default function PlayerRoom() {
   const [error, setError] = useState('');
 
   const socketRef = useRef(null);
+
+  // Sync if URL query param pin changes
+  useEffect(() => {
+    if (initialPin) {
+      setPin(initialPin);
+      setTempPin(initialPin);
+      setJoinStep('profile');
+    }
+  }, [initialPin]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -141,11 +153,29 @@ export default function PlayerRoom() {
     };
   }, [phase, nickname, user, navigate]);
 
-  // Handle Joining Game
+  // Step 1 -> Step 2 validation
+  const handleProceedToProfile = (e) => {
+    e?.preventDefault();
+    const cleanPin = tempPin.trim();
+    if (!cleanPin || cleanPin.length !== 6) {
+      setError('Please enter a valid 6-digit Game PIN.');
+      return;
+    }
+    setError('');
+    setPin(cleanPin);
+    setJoinStep('profile');
+  };
+
+  // Step 2: Handle Joining Game with Avatar & Nickname
   const handleJoin = (e) => {
     e?.preventDefault();
-    if (!pin.trim() || !nickname.trim()) {
-      setError('Please enter both Game PIN and Nickname.');
+    if (!pin.trim()) {
+      setJoinStep('pin');
+      setError('Please enter a 6-digit Game PIN.');
+      return;
+    }
+    if (!nickname.trim()) {
+      setError('Please enter your Nickname.');
       return;
     }
 
@@ -248,99 +278,139 @@ export default function PlayerRoom() {
       {/* ======================================================== */}
       {phase === 'join' && (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '32px 24px', textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
-              <Gamepad2 size={32} color="var(--secondary)" />
-              <h1 style={{ fontSize: '1.85rem', margin: 0 }}>Join Qizzy</h1>
-            </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
-              Pick your avatar and enter the Game PIN:
-            </p>
-
-            {/* Interactive Avatar Preview */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '18px' }}>
-              <div 
-                onClick={() => setShowAvatarPicker(true)}
-                style={{ 
-                  width: '78px', 
-                  height: '78px', 
-                  borderRadius: '50%', 
-                  background: activeColorObj.gradient,
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  fontSize: '2.3rem', 
-                  cursor: 'pointer',
-                  boxShadow: `0 0 20px ${activeColorObj.border}50`,
-                  border: `3px solid ${activeColorObj.border}`,
-                  marginBottom: '8px',
-                  transition: 'transform 0.15s ease'
-                }}
-                title="Click to change your avatar"
-              >
-                {avatar.emoji}
+          {joinStep === 'pin' ? (
+            /* STEP 1: Enter Game PIN (only if not prefilled) */
+            <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '32px 24px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+                <Gamepad2 size={32} color="var(--secondary)" />
+                <h1 style={{ fontSize: '1.85rem', margin: 0 }}>Join Qizzy</h1>
               </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '22px' }}>
+                Enter the 6-digit Game PIN from the host:
+              </p>
 
-              <div style={{ display: 'flex', gap: '6px' }}>
+              {error && (
+                <div className="error-banner" style={{ marginBottom: '18px' }}>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleProceedToProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>Game PIN</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="000000"
+                    maxLength={6}
+                    autoFocus
+                    style={{ fontSize: '1.6rem', fontWeight: 900, textAlign: 'center', letterSpacing: '6px' }}
+                    value={tempPin}
+                    onChange={(e) => setTempPin(e.target.value.replace(/\D/g, ''))}
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="btn btn-accent" style={{ padding: '13px', fontSize: '1.05rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  Next <ArrowRight size={18} />
+                </button>
+              </form>
+            </div>
+          ) : (
+            /* STEP 2: Choose Avatar & Nickname (No repetitive PIN input!) */
+            <div className="glass-panel" style={{ width: '100%', maxWidth: '420px', padding: '28px 22px', textAlign: 'center' }}>
+              {/* Clean Room PIN indicator bar */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border-glass)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Room PIN:</span>
+                  <span className="badge" style={{ background: 'rgba(227, 202, 165, 0.2)', color: 'var(--secondary)', fontSize: '0.92rem', fontWeight: 900, letterSpacing: '2px', padding: '3px 10px' }}>
+                    {pin}
+                  </span>
+                </div>
                 <button
                   type="button"
+                  onClick={() => {
+                    setError('');
+                    setJoinStep('pin');
+                  }}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline', padding: '2px 4px' }}
+                >
+                  Change PIN
+                </button>
+              </div>
+
+              {/* Interactive Avatar Preview */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '18px' }}>
+                <div 
                   onClick={() => setShowAvatarPicker(true)}
-                  className="btn btn-secondary"
-                  style={{ padding: '3px 12px', fontSize: '0.78rem', borderRadius: '12px' }}
+                  style={{ 
+                    width: '82px', 
+                    height: '82px', 
+                    borderRadius: '50%', 
+                    background: activeColorObj.gradient,
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontSize: '2.5rem', 
+                    cursor: 'pointer',
+                    boxShadow: `0 0 22px ${activeColorObj.border}50`,
+                    border: `3px solid ${activeColorObj.border}`,
+                    marginBottom: '8px',
+                    transition: 'transform 0.15s ease'
+                  }}
+                  title="Click to change your avatar"
                 >
-                  ✏️ Change Avatar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAvatar(getRandomAvatar())}
-                  className="btn btn-secondary"
-                  style={{ padding: '3px 10px', fontSize: '0.78rem', borderRadius: '12px' }}
-                  title="Random Avatar"
-                >
-                  <Shuffle size={12} />
-                </button>
+                  {avatar.emoji}
+                </div>
+
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAvatarPicker(true)}
+                    className="btn btn-secondary"
+                    style={{ padding: '4px 14px', fontSize: '0.78rem', borderRadius: '16px' }}
+                  >
+                    ✏️ Change Avatar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAvatar(getRandomAvatar())}
+                    className="btn btn-secondary"
+                    style={{ padding: '4px 10px', fontSize: '0.78rem', borderRadius: '16px' }}
+                    title="Random Avatar"
+                  >
+                    <Shuffle size={12} />
+                  </button>
+                </div>
               </div>
+
+              {error && (
+                <div className="error-banner" style={{ marginBottom: '16px' }}>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="form-group" style={{ marginBottom: 0, textAlign: 'left' }}>
+                  <label>Your Nickname</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter your name"
+                    maxLength={20}
+                    autoFocus
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="btn btn-accent" style={{ padding: '13px', fontSize: '1.05rem', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Play size={18} fill="currentColor" /> Enter Game
+                </button>
+              </form>
             </div>
-
-            {error && (
-              <div className="error-banner" style={{ marginBottom: '18px' }}>
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label>6-Digit Game PIN</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. 849201"
-                  maxLength={6}
-                  style={{ fontSize: '1.35rem', fontWeight: 900, textAlign: 'center', letterSpacing: '5px' }}
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                  required
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label>Your Nickname</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Enter your name"
-                  maxLength={20}
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  required
-                />
-              </div>
-
-              <button type="submit" className="btn btn-accent" style={{ padding: '13px', fontSize: '1.05rem', marginTop: '6px' }}>
-                <Play size={18} /> Enter Game
-              </button>
-            </form>
-          </div>
+          )}
         </div>
       )}
 
