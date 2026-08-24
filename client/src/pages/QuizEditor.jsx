@@ -630,7 +630,7 @@ export default function QuizEditor() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Settings size={20} color="#6c5ce7" />
+                <Settings size={20} color="var(--primary)" />
                 <h3 style={{ fontSize: '1.2rem' }}>Quiz Settings</h3>
               </div>
               <button 

@@ -189,7 +189,7 @@ export default function Register() {
                   id="adminPasscode"
                   type={showAdminPasscode ? 'text' : 'password'}
                   className="form-input"
-                  style={{ borderColor: fieldErrors.adminPasscode ? 'var(--color-red)' : 'rgba(209, 204, 192, 0.5)' }}
+                  style={{ borderColor: fieldErrors.adminPasscode ? 'var(--color-red)' : 'rgba(149, 204, 221, 0.4)' }}
                   placeholder="Secret passcode"
                   value={adminPasscode}
                   onChange={(e) => {

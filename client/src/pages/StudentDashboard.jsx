@@ -14,7 +14,6 @@ import {
   CheckCircle2, 
   XCircle, 
   Clock, 
-  Flame, 
   Sparkles, 
   RefreshCw, 
   HelpCircle,
@@ -38,7 +37,7 @@ export default function StudentDashboard() {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { /* fallback */ }
     }
-    return { emoji: '🦊', color: 'sand' };
+    return { emoji: '🦊', color: 'azure' };
   });
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
@@ -100,10 +99,10 @@ export default function StudentDashboard() {
 
   // Compute Rank Tier Badge
   const getTierInfo = (score = 0) => {
-    if (score >= 10000) return { title: 'Grandmaster', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.2)', icon: '💎' };
+    if (score >= 10000) return { title: 'Grandmaster', color: '#818cf8', bg: 'rgba(129, 140, 248, 0.2)', icon: '💎' };
     if (score >= 5000) return { title: 'Gold Quizzer', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.2)', icon: '🥇' };
-    if (score >= 2000) return { title: 'Silver Scholar', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.2)', icon: '🥈' };
-    return { title: 'Rookie Scout', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.18)', icon: '🥉' };
+    if (score >= 2000) return { title: 'Silver Scholar', color: '#95CCDD', bg: 'rgba(149, 204, 221, 0.2)', icon: '🥈' };
+    return { title: 'Rookie Scout', color: '#D0E7E6', bg: 'rgba(208, 231, 230, 0.18)', icon: '🥉' };
   };
 
   const stats = analytics?.stats || {
@@ -147,7 +146,7 @@ export default function StudentDashboard() {
             title="Click to customize your student avatar"
           >
             {avatar.emoji}
-            <span style={{ position: 'absolute', bottom: '-4px', right: '-4px', background: 'var(--secondary)', color: '#21201e', fontSize: '0.62rem', fontWeight: 800, padding: '2px 5px', borderRadius: '6px' }}>
+            <span style={{ position: 'absolute', bottom: '-4px', right: '-4px', background: 'var(--secondary)', color: '#293681', fontSize: '0.62rem', fontWeight: 800, padding: '2px 5px', borderRadius: '6px' }}>
               EDIT
             </span>
           </div>
@@ -206,7 +205,7 @@ export default function StudentDashboard() {
       <div className="student-stats-grid">
         {/* Total Score */}
         <div className="glass-card student-stat-card">
-          <div style={{ ...styles.statIconCircle, background: 'rgba(255, 71, 87, 0.15)', color: '#ff6b81' }}>
+          <div style={{ ...styles.statIconCircle, background: 'rgba(66, 116, 217, 0.15)', color: '#95CCDD' }}>
             <Trophy size={22} />
           </div>
           <div style={{ flex: 1 }}>
@@ -218,7 +217,7 @@ export default function StudentDashboard() {
 
         {/* Accuracy Rate */}
         <div className="glass-card student-stat-card">
-          <div style={{ ...styles.statIconCircle, background: 'rgba(0, 210, 211, 0.15)', color: 'var(--secondary)' }}>
+          <div style={{ ...styles.statIconCircle, background: 'rgba(208, 231, 230, 0.15)', color: 'var(--secondary)' }}>
             <Target size={22} />
           </div>
           <div style={{ flex: 1 }}>
@@ -233,7 +232,7 @@ export default function StudentDashboard() {
 
         {/* Average Score */}
         <div className="glass-card student-stat-card">
-          <div style={{ ...styles.statIconCircle, background: 'rgba(162, 155, 254, 0.15)', color: '#a29bfe' }}>
+          <div style={{ ...styles.statIconCircle, background: 'rgba(66, 116, 217, 0.2)', color: '#D0E7E6' }}>
             <Award size={22} />
           </div>
           <div style={{ flex: 1 }}>
@@ -245,7 +244,7 @@ export default function StudentDashboard() {
 
         {/* Quizzes Played */}
         <div className="glass-card student-stat-card">
-          <div style={{ ...styles.statIconCircle, background: 'rgba(255, 211, 42, 0.15)', color: '#ffd32a' }}>
+          <div style={{ ...styles.statIconCircle, background: 'rgba(149, 204, 221, 0.15)', color: '#fbbf24' }}>
             <History size={22} />
           </div>
           <div style={{ flex: 1 }}>
@@ -292,7 +291,7 @@ export default function StudentDashboard() {
                     <img src={session.quizCover} alt={session.quizTitle} style={styles.historyCover} />
                   ) : (
                     <div style={styles.historyCoverPlaceholder}>
-                      <Gamepad2 size={24} color="var(--primary)" />
+                      <Gamepad2 size={24} color="var(--secondary)" />
                     </div>
                   )}
                 </div>
@@ -452,9 +451,9 @@ function getRankBadgeStyle(rank) {
   };
 
   if (rank === 1) return { ...base, background: 'rgba(251, 191, 36, 0.25)', color: '#fbbf24', border: '1px solid #fbbf24' };
-  if (rank === 2) return { ...base, background: 'rgba(56, 189, 248, 0.25)', color: '#38bdf8', border: '1px solid #38bdf8' };
+  if (rank === 2) return { ...base, background: 'rgba(149, 204, 221, 0.25)', color: '#95CCDD', border: '1px solid #95CCDD' };
   if (rank === 3) return { ...base, background: 'rgba(251, 146, 60, 0.25)', color: '#fb923c', border: '1px solid #ea580c' };
-  return { ...base, background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text-muted)' };
+  return { ...base, background: 'rgba(208, 231, 230, 0.1)', color: 'var(--text-muted)' };
 }
 
 const styles = {
@@ -462,11 +461,11 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
-    background: 'rgba(255, 255, 255, 0.06)',
+    background: 'rgba(208, 231, 230, 0.08)',
     padding: '4px 10px',
     borderRadius: '20px',
     marginBottom: '10px',
-    border: '1px solid rgba(255, 255, 255, 0.1)'
+    border: '1px solid rgba(208, 231, 230, 0.15)'
   },
   quickJoinBtn: {
     padding: '10px 18px',
@@ -527,14 +526,14 @@ const styles = {
   accuracyProgressTrack: {
     width: '100%',
     height: '6px',
-    background: 'rgba(255, 255, 255, 0.08)',
+    background: 'rgba(208, 231, 230, 0.1)',
     borderRadius: '3px',
     margin: '6px 0 2px',
     overflow: 'hidden'
   },
   accuracyProgressFill: {
     height: '100%',
-    background: 'linear-gradient(90deg, var(--secondary) 0%, #2ed573 100%)',
+    background: 'linear-gradient(90deg, #4274D9 0%, #95CCDD 100%)',
     borderRadius: '3px',
     transition: 'width 0.5s ease'
   },
@@ -547,7 +546,7 @@ const styles = {
     width: '70px',
     height: '70px',
     borderRadius: '50%',
-    background: 'rgba(209, 204, 192, 0.12)',
+    background: 'rgba(208, 231, 230, 0.12)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -568,7 +567,7 @@ const styles = {
   historyCoverPlaceholder: {
     width: '100%',
     height: '100%',
-    background: 'rgba(132, 129, 122, 0.2)',
+    background: 'rgba(208, 231, 230, 0.15)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
@@ -622,7 +621,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.75)',
+    background: 'rgba(11, 17, 36, 0.85)',
     backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
@@ -644,7 +643,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '20px 24px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+    borderBottom: '1px solid rgba(208, 231, 230, 0.15)'
   },
   modalCloseBtn: {
     background: 'transparent',
@@ -668,7 +667,7 @@ const styles = {
     justifyContent: 'space-between'
   },
   answerComparison: {
-    background: 'rgba(0, 0, 0, 0.25)',
+    background: 'rgba(11, 17, 36, 0.5)',
     padding: '8px 12px',
     borderRadius: '8px',
     marginTop: '8px'

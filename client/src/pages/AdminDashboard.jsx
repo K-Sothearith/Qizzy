@@ -112,7 +112,7 @@ export default function AdminDashboard() {
       <div className="glass-panel" style={{ padding: '32px' }}>
         <div style={styles.libraryHeader}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Library size={22} color="#6c5ce7" />
+            <Library size={22} color="var(--primary)" />
             <h2 style={{ fontSize: '1.4rem' }}>Your Quiz Library ({quizzes.length})</h2>
           </div>
 
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
         ) : quizzes.length === 0 ? (
           /* Empty State */
           <div style={styles.emptyState}>
-            <Layers size={48} color="#a0a5b5" style={{ opacity: 0.5, marginBottom: '16px' }} />
+            <Layers size={48} color="var(--secondary)" style={{ opacity: 0.5, marginBottom: '16px' }} />
             <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>No quizzes created yet</h3>
             <p style={{ color: 'var(--text-muted)', maxWidth: '420px', marginBottom: '24px', fontSize: '0.92rem' }}>
               Get started by creating your first interactive quiz with custom questions, timers, and Kahoot-style color buttons.
@@ -187,8 +187,8 @@ export default function AdminDashboard() {
                     />
                   ) : (
                     <div className="quiz-card-cover-placeholder">
-                      <HelpCircle size={36} color="#6c5ce7" style={{ opacity: 0.7 }} />
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Qizzy Live</span>
+                      <HelpCircle size={36} color="var(--secondary)" style={{ opacity: 0.8 }} />
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Qizzy Live</span>
                     </div>
                   )}
                 </div>
@@ -203,15 +203,15 @@ export default function AdminDashboard() {
                   {/* Metadata Row */}
                   <div className="quiz-card-meta">
                     <div className="quiz-meta-item" title="Question Count">
-                      <Layers size={14} color="#6c5ce7" />
+                      <Layers size={14} color="var(--primary)" />
                       <span>{quiz.question_count || 0} Questions</span>
                     </div>
                     <div className="quiz-meta-item" title="Total Duration">
-                      <Clock size={14} color="#00cec9" />
+                      <Clock size={14} color="var(--secondary)" />
                       <span>{quiz.total_duration_seconds || 0}s</span>
                     </div>
                     <div className="quiz-meta-item" title="Total Potential Points">
-                      <Award size={14} color="#f39c12" />
+                      <Award size={14} color="#fbbf24" />
                       <span>{quiz.total_points || 0} pts</span>
                     </div>
                   </div>

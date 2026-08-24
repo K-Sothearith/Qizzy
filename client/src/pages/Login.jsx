@@ -111,7 +111,7 @@ export default function Login() {
           <p style={styles.subtitle}>Sign in to join live quizzes and view your scores</p>
         </div>
 
-        <hr style={{ width: '75%', marginBottom: '15px', marginLeft: 'auto', marginRight: 'auto', border: '0.5px solid rgba(255, 255, 255, 0.08)' }} />
+        <hr style={{ width: '75%', marginBottom: '15px', marginLeft: 'auto', marginRight: 'auto', border: '0.5px solid rgba(208, 231, 230, 0.15)' }} />
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
@@ -213,8 +213,8 @@ const styles = {
     width: '60px',
     height: '60px',
     borderRadius: '50%',
-    background: 'rgba(132, 129, 122, 0.2)',
-    border: '1px solid rgba(209, 204, 192, 0.3)',
+    background: 'rgba(66, 116, 217, 0.18)',
+    border: '1px solid rgba(149, 204, 221, 0.35)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

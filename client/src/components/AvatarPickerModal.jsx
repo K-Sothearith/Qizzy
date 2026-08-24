@@ -21,13 +21,13 @@ export const AVATAR_PRESETS = [
 ];
 
 export const COLOR_PRESETS = [
-  { id: 'caramel', label: 'Warm Caramel', gradient: 'linear-gradient(135deg, #AD8B73 0%, #8C6D58 100%)', border: '#E3CAA5' },
-  { id: 'latte', label: 'Golden Latte', gradient: 'linear-gradient(135deg, #FFFBE9 0%, #E3CAA5 100%)', border: '#FFFBE9' },
+  { id: 'azure', label: 'Royal Azure', gradient: 'linear-gradient(135deg, #4274D9 0%, #293681 100%)', border: '#95CCDD' },
+  { id: 'ice', label: 'Ice Aqua', gradient: 'linear-gradient(135deg, #FFFFFF 0%, #D0E7E6 60%, #95CCDD 100%)', border: '#D0E7E6' },
+  { id: 'sky', label: 'Sky Cyan', gradient: 'linear-gradient(135deg, #95CCDD 0%, #4274D9 100%)', border: '#95CCDD' },
+  { id: 'navy', label: 'Midnight Navy', gradient: 'linear-gradient(135deg, #293681 0%, #10183b 100%)', border: '#4274D9' },
   { id: 'gold', label: 'Golden Sun', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: '#fbbf24' },
-  { id: 'coral', label: 'Coral Flame', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: '#f87171' },
   { id: 'emerald', label: 'Emerald Mint', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: '#34d399' },
-  { id: 'sky', label: 'Ocean Sky', gradient: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)', border: '#7dd3fc' },
-  { id: 'violet', label: 'Cosmic Violet', gradient: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)', border: '#c084fc' }
+  { id: 'violet', label: 'Cosmic Violet', gradient: 'linear-gradient(135deg, #818cf8 0%, #4f46e5 100%)', border: '#a5b4fc' }
 ];
 
 export function getRandomAvatar() {
@@ -43,7 +43,10 @@ export function getAvatarColorStyle(colorId) {
 
 export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
   const [selectedEmoji, setSelectedEmoji] = useState(currentAvatar?.emoji || '🦊');
-  const [selectedColor, setSelectedColor] = useState(currentAvatar?.color || 'caramel');
+  const [selectedColor, setSelectedColor] = useState(() => {
+    const validColor = COLOR_PRESETS.find(c => c.id === currentAvatar?.color);
+    return validColor ? validColor.id : 'azure';
+  });
 
   const activeColorObj = COLOR_PRESETS.find(c => c.id === selectedColor) || COLOR_PRESETS[0];
 
@@ -144,7 +147,7 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
                   onClick={() => setSelectedEmoji(item.emoji)}
                   style={{
                     height: '46px',
-                    background: isSelected ? 'rgba(255, 251, 233, 0.22)' : 'rgba(255, 255, 255, 0.05)',
+                    background: isSelected ? 'rgba(66, 116, 217, 0.3)' : 'rgba(255, 255, 255, 0.05)',
                     border: isSelected ? '2px solid var(--secondary)' : '1px solid var(--border-glass)',
                     borderRadius: '12px',
                     fontSize: '1.45rem',
@@ -153,7 +156,7 @@ export default function AvatarPickerModal({ currentAvatar, onSave, onClose }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     transform: isSelected ? 'scale(1.08)' : 'scale(1)',
-                    boxShadow: isSelected ? '0 0 10px rgba(227, 202, 165, 0.4)' : 'none',
+                    boxShadow: isSelected ? '0 0 10px rgba(149, 204, 221, 0.4)' : 'none',
                     transition: 'all 0.15s ease',
                     padding: 0
                   }}

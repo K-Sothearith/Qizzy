@@ -11,11 +11,7 @@ import {
   Gamepad2, 
   RefreshCw, 
   ChevronRight, 
-  X, 
-  Award,
-  Sparkles,
-  CheckCircle2,
-  Clock
+  X
 } from 'lucide-react';
 
 export default function HostHistory() {
@@ -64,9 +60,9 @@ export default function HostHistory() {
 
   const getRankBadge = (rank) => {
     if (rank === 1) return { label: '🥇 1st', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.18)', border: '1px solid rgba(251, 191, 36, 0.45)' };
-    if (rank === 2) return { label: '🥈 2nd', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.18)', border: '1px solid rgba(56, 189, 248, 0.45)' };
+    if (rank === 2) return { label: '🥈 2nd', color: '#95CCDD', bg: 'rgba(149, 204, 221, 0.18)', border: '1px solid rgba(149, 204, 221, 0.45)' };
     if (rank === 3) return { label: '🥉 3rd', color: '#fb923c', bg: 'rgba(251, 146, 60, 0.18)', border: '1px solid rgba(251, 146, 60, 0.45)' };
-    return { label: `#${rank}`, color: 'var(--text-muted)', bg: 'rgba(255, 255, 255, 0.06)', border: '1px solid var(--border-glass)' };
+    return { label: `#${rank}`, color: 'var(--text-muted)', bg: 'rgba(208, 231, 230, 0.08)', border: '1px solid var(--border-glass)' };
   };
 
   return (
@@ -141,7 +137,7 @@ export default function HostHistory() {
       ) : (
         /* 5 Quiz Records List */
         <div style={styles.sessionList}>
-          {history.map((session, index) => (
+          {history.map((session) => (
             <div key={session.sessionId} className="glass-panel" style={styles.sessionCard}>
               {/* Session Header / Identity */}
               <div style={styles.sessionCardHeader}>
@@ -353,14 +349,14 @@ const styles = {
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: '16px',
-    background: 'linear-gradient(135deg, rgba(39, 55, 77, 0.95) 0%, rgba(82, 109, 130, 0.45) 100%)',
-    border: '1px solid rgba(157, 178, 191, 0.3)'
+    background: 'linear-gradient(135deg, rgba(24, 36, 74, 0.95) 0%, rgba(41, 54, 129, 0.5) 100%)',
+    border: '1px solid rgba(208, 231, 230, 0.28)'
   },
   heroIconWrap: {
     width: '50px',
     height: '50px',
     borderRadius: '14px',
-    background: 'rgba(82, 109, 130, 0.3)',
+    background: 'rgba(66, 116, 217, 0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -385,7 +381,7 @@ const styles = {
     width: '74px',
     height: '74px',
     borderRadius: '50%',
-    background: 'rgba(157, 178, 191, 0.15)',
+    background: 'rgba(208, 231, 230, 0.12)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -433,7 +429,7 @@ const styles = {
   coverPlaceholder: {
     width: '100%',
     height: '100%',
-    background: 'rgba(132, 129, 122, 0.25)',
+    background: 'rgba(208, 231, 230, 0.15)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
@@ -485,7 +481,7 @@ const styles = {
     textAlign: 'center',
     color: 'var(--text-muted)',
     fontSize: '0.88rem',
-    background: 'rgba(0, 0, 0, 0.2)',
+    background: 'rgba(11, 17, 36, 0.4)',
     borderRadius: '10px'
   },
   leaderboardTable: {
@@ -498,7 +494,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 14px',
-    background: 'rgba(132, 129, 122, 0.14)',
+    background: 'rgba(208, 231, 230, 0.08)',
     borderRadius: '10px',
     border: '1px solid var(--border-glass)'
   },
@@ -550,7 +546,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(25, 24, 22, 0.8)',
+    background: 'rgba(11, 17, 36, 0.85)',
     backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
