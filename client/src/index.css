@@ -236,14 +236,272 @@ a:hover {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
 }
 
-/* Auth 100vh Screen Layout */
+/* Auth Screen Layout */
 .auth-page-container {
   min-height: calc(100vh - 65px);
   min-height: calc(100dvh - 65px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 32px 20px;
+}
+
+/* Auth 2-Column Split Container */
+.auth-split-wrapper {
+  width: 100%;
+  max-width: 1080px;
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 30px;
+  align-items: stretch;
+}
+
+/* Left Hero & Feature Description Pane */
+.auth-feature-pane {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 36px 36px 28px 36px;
+  background: radial-gradient(circle at 10% 10%, rgba(66, 116, 217, 0.2) 0%, rgba(18, 27, 56, 0.92) 100%);
+  border: 1px solid var(--border-glass);
+  border-radius: 22px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.auth-feature-pane::before {
+  content: '';
+  position: absolute;
+  top: -90px;
+  left: -90px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(149, 204, 221, 0.24) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.auth-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.auth-brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4274D9 0%, #293681 100%);
+  border: 1px solid rgba(208, 231, 230, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.auth-brand-title {
+  font-family: var(--font-heading);
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: #FFFFFF;
+}
+
+.auth-hero-headline {
+  font-family: var(--font-heading);
+  font-size: 2.05rem;
+  font-weight: 800;
+  line-height: 1.22;
+  color: #FFFFFF;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.auth-hero-headline .highlight-word {
+  color: #95CCDD;
+  background: linear-gradient(135deg, #FFFFFF 0%, #95CCDD 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-hero-headline .highlight-word-accent {
+  color: #f59e0b;
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-hero-desc {
+  color: #D0E7E6;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin-bottom: 22px;
+  opacity: 0.92;
+}
+
+.auth-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.auth-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 13px 15px;
+  background: rgba(24, 36, 74, 0.55);
+  border: 1px solid rgba(208, 231, 230, 0.14);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.auth-feature-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(149, 204, 221, 0.4);
+  background: rgba(24, 36, 74, 0.8);
+}
+
+.auth-feature-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-wrap-cyan {
+  background: rgba(149, 204, 221, 0.15);
+  color: #95CCDD;
+  border: 1px solid rgba(149, 204, 221, 0.3);
+}
+
+.icon-wrap-blue {
+  background: rgba(66, 116, 217, 0.2);
+  color: #5385ea;
+  border: 1px solid rgba(66, 116, 217, 0.35);
+}
+
+.icon-wrap-yellow {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.auth-feature-content h4 {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 2px;
+}
+
+.auth-feature-content p {
+  font-size: 0.8rem;
+  color: #D0E7E6;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.auth-trust-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid rgba(208, 231, 230, 0.12);
+}
+
+.auth-trust-text {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #95CCDD;
+}
+
+.auth-trust-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.auth-trust-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(208, 231, 230, 0.4);
+}
+
+.dot-1 {
+  background: #4274D9;
+}
+.dot-2 {
+  background: #95CCDD;
+}
+.dot-3 {
+  background: #293681;
+}
+
+/* Right Auth Form Card */
+.auth-form-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 22px;
+  padding: 32px 30px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.form-input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.form-field-icon {
+  position: absolute;
+  left: 14px;
+  color: #95CCDD;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-input-with-icon .form-input {
+  padding-left: 42px;
+}
+
+.terms-agreement-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 12px 0 16px 0;
+  font-size: 0.79rem;
+  color: #D0E7E6;
+  line-height: 1.35;
+}
+
+.terms-checkbox-custom {
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #4274D9;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 /* Form Inputs & Controls */
@@ -749,11 +1007,14 @@ h1, h2, h3, h4 {
 /* =================================================== */
 
 .quiz-editor-page {
-  min-height: calc(100vh - 65px);
-  min-height: calc(100dvh - 65px);
+  height: calc(100vh - 65px);
+  height: calc(100dvh - 65px);
+  max-height: calc(100vh - 65px);
+  max-height: calc(100dvh - 65px);
   display: flex;
   flex-direction: column;
   background: var(--bg-dark);
+  overflow: hidden;
 }
 
 /* Top Sticky Control Bar */
@@ -769,6 +1030,7 @@ h1, h2, h3, h4 {
   position: sticky;
   top: 0;
   z-index: 50;
+  flex-shrink: 0;
 }
 
 .editor-title-container {
@@ -809,18 +1071,22 @@ h1, h2, h3, h4 {
 .editor-workspace {
   display: flex;
   flex: 1;
-  height: calc(100vh - 130px);
+  min-height: 0;
+  height: calc(100% - 60px);
   overflow: hidden;
 }
 
 /* Left Sidebar Question Strip */
 .question-strip {
   width: 260px;
+  min-width: 260px;
   background: rgba(14, 21, 46, 0.92);
   border-right: 1px solid var(--border-glass);
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .question-strip-header {
@@ -829,6 +1095,7 @@ h1, h2, h3, h4 {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-glass);
+  flex-shrink: 0;
 }
 
 .question-strip-header h3 {
@@ -838,6 +1105,7 @@ h1, h2, h3, h4 {
 
 .question-strip-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 14px;
   display: flex;
@@ -930,11 +1198,14 @@ h1, h2, h3, h4 {
 .question-strip-footer {
   padding: 14px;
   border-top: 1px solid var(--border-glass);
+  flex-shrink: 0;
 }
 
 /* Central Question Canvas */
 .question-canvas {
   flex: 1;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
   padding: 24px 36px;
   display: flex;
@@ -949,6 +1220,7 @@ h1, h2, h3, h4 {
   border-radius: 16px;
   padding: 18px 24px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
 }
 
 .question-prompt-input {
@@ -980,6 +1252,7 @@ h1, h2, h3, h4 {
   border: 1px solid var(--border-glass);
   border-radius: 12px;
   padding: 12px 18px;
+  flex-shrink: 0;
 }
 
 .control-group {
@@ -1031,18 +1304,22 @@ h1, h2, h3, h4 {
 .kahoot-options-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(2, minmax(80px, 1fr));
   gap: 16px;
   flex: 1;
-  min-height: 240px;
+  min-height: 180px;
+  max-height: 260px;
 }
 
 .kahoot-options-grid.tf-mode {
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: minmax(80px, 1fr);
+  max-height: 130px;
 }
 
 .kahoot-option-card {
   border-radius: 16px;
-  padding: 18px 22px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1050,6 +1327,8 @@ h1, h2, h3, h4 {
   border: 2px solid transparent;
   transition: all 0.2s ease;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  min-height: 80px;
+  max-height: 120px;
 }
 
 /* Colors with vibrant Kahoot aesthetic */
@@ -2216,7 +2495,87 @@ h1, h2, h3, h4 {
     height: 72px;
   }
 
+  /* Auth Split Screen Mobile Responsive */
+  .auth-page-container {
+    padding: 16px 12px;
+  }
+
+  .auth-split-wrapper {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+    gap: 20px;
+  }
+
+  .auth-feature-pane {
+    padding: 24px 20px 18px 20px;
+    border-radius: 18px;
+  }
+
+  .auth-hero-headline {
+    font-size: 1.55rem;
+  }
+
+  .auth-hero-desc {
+    font-size: 0.86rem;
+    margin-bottom: 16px;
+  }
+
+  .auth-features-list {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .auth-feature-item {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .auth-form-card {
+    padding: 24px 18px;
+    border-radius: 18px;
+  }
+
   /* Quiz Editor Mobile */
+  .quiz-editor-page {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .editor-workspace {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  .question-strip {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-glass);
+  }
+
+  .question-strip-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 130px;
+    padding: 10px 12px;
+  }
+
+  .question-thumbnail-card {
+    min-width: 160px;
+    flex-shrink: 0;
+  }
+
+  .question-canvas {
+    padding: 14px;
+    gap: 14px;
+    height: auto;
+    overflow: visible;
+  }
+
   .editor-topbar {
     flex-direction: column;
     padding: 10px 14px;
@@ -2234,16 +2593,22 @@ h1, h2, h3, h4 {
 
   .kahoot-options-grid {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    max-height: none;
+    min-height: auto;
     gap: 10px;
+  }
+
+  .kahoot-options-grid.tf-mode {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    max-height: none;
   }
 
   .kahoot-option-card {
     padding: 12px 14px;
-  }
-
-  .question-canvas {
-    padding: 14px;
-    gap: 14px;
+    min-height: 60px;
+    max-height: none;
   }
 
   .question-prompt-input {
